@@ -99,7 +99,7 @@ app.get('/api/auth/me', requireAccount, (req, res) => res.json({ account: req.ac
 app.post('/api/auth/logout', (_req, res) => { clearSession(res); res.json({ ok: true }); });
 app.post('/api/bookings', requireAccount, async (req, res) => {
   const { from, to, travelDate, passengers, tripType = 'oneway', returnDate = null } = req.body || {};
-  if (![from, to, travelDate].every(v => typeof v === 'string' && v.trim()) || !Number.isInteger(passengers) || passengers < 1 || passengers > 5 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(travelDate) || !['oneway','round'].includes(tripType) || (tripType === 'round' && (typeof returnDate !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(returnDate) || returnDate < travelDate)))
+  if (![from, to, travelDate].every(v => typeof v === 'string' && v.trim()) || !Number.isInteger(passengers) || passengers < 1 || passengers > 5 || !/^\d{4}-\d{2}-\d{2}$/.test(travelDate) || !['oneway','round'].includes(tripType) || (tripType === 'round' && (typeof returnDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(returnDate) || returnDate < travelDate)))
     return res.status(400).json({ error: 'Please complete all travel fields with valid details. A return date is required for round trips.' });
   if (new Date(travelDate + 'T00:00:00Z') < new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')) return res.status(400).json({ error: 'Travel date cannot be in the past.' });
   try {
