@@ -38,7 +38,10 @@ async function initialise() {
     ];
     for (const sql of migrations) await db().query(sql);
     await db().query("CREATE UNIQUE INDEX IF NOT EXISTS bookings_checkout_request_unique ON bookings(checkout_request_id) WHERE checkout_request_id IS NOT NULL");
-  })();
+  })().catch(error => {
+    initPromise = null;
+    throw error;
+  });
   return initPromise;
 }
 function signToken(id) {
