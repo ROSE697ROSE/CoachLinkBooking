@@ -19,8 +19,9 @@ function db() {
 async function initialise() {
   if (!initPromise) initPromise = (async () => {
     await db().query('CREATE TABLE IF NOT EXISTS accounts (id BIGSERIAL PRIMARY KEY, full_name VARCHAR(120) NOT NULL, phone VARCHAR(30) UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
-    await db().query('CREATE TABLE IF NOT EXISTS bookings (id BIGSERIAL PRIMARY KEY, reference VARCHAR(20) UNIQUE NOT NULL, departure VARCHAR(100) NOT NULL, destination VARCHAR(100) NOT NULL, travel_date DATE NOT NULL, passengers INTEGER NOT NULL CHECK (passengers BETWEEN 1 AND 5), passenger_name VARCHAR(120) NOT NULL, phone VARCHAR(30) NOT NULL, account_id BIGINT REFERENCES accounts(id), status VARCHAR(30) NOT NULL DEFAULT \'pending_operator_confirmation\', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
+    await db().query('CREATE TABLE IF NOT EXISTS bookings (id BIGSERIAL PRIMARY KEY, reference VARCHAR(20) UNIQUE NOT NULL, departure VARCHAR(100) NOT NULL, destination VARCHAR(100) NOT NULL, travel_date DATE NOT NULL, passengers INTEGER NOT NULL CHECK (passengers BETWEEN 1 AND 5), passenger_name VARCHAR(120) NOT NULL, phone VARCHAR(30) NOT NULL, account_id BIGINT REFERENCES accounts(id), status VARCHAR(30) NOT NULL DEFAULT \'pending_payment\', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
     await db().query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS account_id BIGINT REFERENCES accounts(id)');
+    await db().query("ALTER TABLE bookings ALTER COLUMN status SET DEFAULT 'pending_payment'");
   })();
   return initPromise;
 }
@@ -103,7 +104,7 @@ app.post('/api/bookings', requireAccount, async (req, res) => {
     await initialise();
     const reference = 'ENA-' + crypto.randomBytes(4).toString('hex').toUpperCase();
     await db().query('INSERT INTO bookings (reference, departure, destination, travel_date, passengers, passenger_name, phone, account_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [reference, from.trim(), to.trim(), travelDate, passengers, req.account.full_name, req.account.phone, req.account.id]);
-    res.status(201).json({ reference, status: 'pending_operator_confirmation' });
+    res.status(201).json({ reference, status: 'pending_payment' });
   } catch (e) { console.error('Booking save failed:', e.message); res.status(503).json({ error: 'Booking service is not ready. Please try again shortly.' }); }
 });
 app.use(express.static(path.join(__dirname, 'public')));
