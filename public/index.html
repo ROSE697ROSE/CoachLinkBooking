@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#087b45">
-<title>ENA Coach Booking | Independent booking service</title>
+<title>CoachLink Booking | Independent booking service</title>
 <style>
 :root{--green:#087b45;--dark:#075b35;--gold:#f3b51b;--ink:#27332c;--muted:#6b756e}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font:15px/1.55 Arial,Helvetica,sans-serif;background:#fff}
 a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#fff}.head{max-width:1200px;margin:auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
 .logo img{display:block;width:190px;max-height:65px;object-fit:contain}.headright{display:flex;align-items:center;gap:20px;color:#45534a;font-size:14px}.headright a{text-decoration:none}.account-link{background:var(--green);color:white!important;padding:10px 17px;border-radius:3px;font-weight:700}
 .nav{background:var(--green);color:#fff}.navinner{max-width:1200px;margin:auto;padding:0 22px;display:flex;align-items:center;flex-wrap:wrap}.nav a{padding:14px 18px;text-decoration:none;font-weight:700;font-size:14px}.nav a:hover{background:var(--dark)}
-.hero{height:390px;background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(0,0,0,.04)),url('https://enacoach.co.ke/assets/WEBP/image1%20(3).webp') center 45%/cover no-repeat;display:flex;align-items:flex-end}
+.hero{height:390px;background:linear-gradient(120deg,#063d2a,#087b45 58%,#1a9660);display:flex;align-items:flex-end}
 .hero-caption{width:100%;background:linear-gradient(transparent,rgba(0,0,0,.65));color:white;padding:80px max(22px,calc((100% - 1156px)/2)) 28px}.hero-caption h1{font-size:34px;margin:0 0 6px}.hero-caption p{margin:0;font-size:16px}
 .booking-shell{max-width:1120px;margin:-55px auto 0;position:relative;padding:0 20px}.booking-card{background:white;border-radius:5px;box-shadow:0 8px 32px #0002;padding:25px;border-top:5px solid var(--gold)}
 .trip-tabs{display:flex;gap:10px;margin-bottom:22px}.trip-tab{border:1px solid #d7e1da;background:#f5f8f6;color:#445148;padding:11px 22px;font-weight:700;cursor:pointer;border-radius:3px}.trip-tab.active{background:var(--green);color:white;border-color:var(--green)}
@@ -31,7 +31,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <body>
 <div class="topbar"></div>
 <header class="header"><div class="head">
-<a class="logo" href="#home" aria-label="Independent ENA Coach booking home"><img src="https://enacoach.co.ke/assets/enacoach/enacoach_logo.png" alt="ENA Coach logo"></a>
+<a class="logo" href="#home" aria-label="CoachLink Booking home" style="text-decoration:none;color:var(--green);font-size:25px;font-weight:900;letter-spacing:1px">COACHLINK</a>
 <div class="headright"><a href="#contact">English</a><a class="support" href="#contact">Support</a><a class="account-link" href="#account">My Account</a></div>
 </div></header>
 <nav class="nav"><div class="navinner"><a href="#home">Home</a><a href="#about">About</a><a href="#ticket">Print Ticket</a><a href="#contact">Contact Us</a><a href="#gallery">Gallery</a></div></nav>
@@ -43,7 +43,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <div class="field"><label for="to">To</label><input id="to" required placeholder="Destination town"></div>
 <div class="field"><label for="date">Travel Date</label><input id="date" type="date" required></div>
 <div class="field round-field" id="return-wrap"><label for="return-date">Return Date</label><input id="return-date" type="date"></div>
-<div class="field"><label for="pax">Passengers</label><select id="pax"><option value="1">1 Passenger</option><option value="2">2 Passengers</option><option value="3">3 Passengers</option><option value="4">4 Passengers</option><option value="5">5 Passengers</option></select></div>
+<div class="field"><label for="payment-phone">M-Pesa Phone Number</label><input id="payment-phone" inputmode="tel" placeholder="07XXXXXXXX"></div><div class="field"><label for="pax">Passengers</label><select id="pax"><option value="1">1 Passenger</option><option value="2">2 Passengers</option><option value="3">3 Passengers</option><option value="4">4 Passengers</option><option value="5">5 Passengers</option></select></div>
 <button class="search-btn" id="search-buses" type="button">Search Buses</button><button class="submit" id="submit" type="submit">Submit Booking Request</button>
 </div><div id="result" class="hidden" role="status" aria-live="polite"></div>
 </form></section>
@@ -59,46 +59,41 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 </section>
 <section class="section" id="about"><h2>Amenities</h2><p class="lead">Offering comfortable travel for your journey</p>
 <div class="amenities">
-<div class="amenity"><img src="https://enacoach.co.ke/assets/dreamline/wi-fi.png" alt="Wi-Fi"><h3>Free Wi-Fi</h3></div>
-<div class="amenity"><img src="https://enacoach.co.ke/assets/dreamline/power.png" alt="Power outlets"><h3>Power Outlets</h3></div>
-<div class="amenity"><img src="https://enacoach.co.ke/assets/dreamline/seats.png" alt="Comfortable seats"><h3>Extra Legroom</h3></div>
+<div class="amenity"><span style="font-size:36px;color:var(--green)">⌁</span><h3>Free Wi-Fi</h3></div>
+<div class="amenity"><span style="font-size:36px;color:var(--green)">⚡</span><h3>Power Outlets</h3></div>
+<div class="amenity"><span style="font-size:36px;color:var(--green)">▤</span><h3>Extra Legroom</h3></div>
 </div></section>
 <section class="section" id="gallery"><h2>Why Choose Us</h2><p class="lead">Enjoy a more convenient journey</p>
 <div class="why-grid">
-<article class="why"><img src="https://enacoach.co.ke/assets/WEBP/mpesa.webp" alt="M-Pesa"><h3>Lipa na M-Pesa</h3><p>Pay using M-Pesa Buy Goods and Services with the Till details displayed after booking.</p></article>
-<article class="why"><img src="https://enacoach.co.ke/assets/WEBP/thumbs.webp" alt="Comfort"><h3>Comfort</h3><p>Plan your trip with passenger-friendly booking details and a simple online experience.</p></article>
-<article class="why"><img src="https://enacoach.co.ke/assets/WEBP/ticket.webp" alt="Online booking"><h3>Easy Booking</h3><p>Submit your journey details online and keep your booking reference for follow-up.</p></article>
+<article class="why"><span style="font-size:36px;color:var(--green)">M-Pesa</span><h3>Lipa na M-Pesa</h3><p>Pay using M-Pesa Buy Goods and Services with the Till details displayed after booking.</p></article>
+<article class="why"><span style="font-size:36px;color:var(--green)">✓</span><h3>Comfort</h3><p>Plan your trip with passenger-friendly booking details and a simple online experience.</p></article>
+<article class="why"><span style="font-size:36px;color:var(--green)">▣</span><h3>Easy Booking</h3><p>Submit your journey details online and keep your booking reference for follow-up.</p></article>
 </div></section>
 <section class="section" id="how"><h2>How It Works</h2><p class="lead">Three simple steps to submit your booking</p><div class="steps">
 <article class="step"><b>1</b><h3>Choose your journey</h3><p>Enter your departure, destination and travel date.</p></article>
 <article class="step"><b>2</b><h3>Submit booking</h3><p>Log in to your passenger account and submit your journey details.</p></article>
 <article class="step"><b>3</b><h3>Pay by M-Pesa</h3><p>Use the Till number shown with your booking instructions and keep your M-Pesa message.</p></article>
 </div>
-<div class="payment"><h3>M-Pesa payment instructions</h3><p>After submitting your booking, select Lipa na M-Pesa → Buy Goods and Services → Till Number <strong>4831168</strong>. Enter the fare applicable to your journey and keep the M-Pesa confirmation message. This independent website does not automatically verify M-Pesa payments.</p></div>
+<div class="payment"><h3>Secure M-Pesa payments</h3><p>When your route fare and Daraja merchant account are configured, CoachLink will send an M-Pesa STK prompt to your phone. Enter your PIN and wait for automatic payment confirmation. Do not send money to an unverified Till number.</p></div>
 </section>
 <section class="section" id="ticket"><div class="ticket-info"><h2>Print Ticket</h2><p>Keep your booking reference and M-Pesa confirmation. Ticket printing is not yet available on this independent booking page.</p></div></section>
-<p class="disclaimer" id="contact">Independent booking-request website. It is not the official ENA Coach website and is not affiliated with or endorsed by ENA Coach. Confirm route details and fare information before making payment.</p>
+<p class="disclaimer" id="contact">CoachLink is an independent bus booking service. Route schedules and fares are published only after verification by the operator.</p>
 <footer class="footer"><div class="footinner">
-<div><img class="footlogo" src="https://enacoach.co.ke/assets/enacoach/enacoach_logo.png" alt="ENA Coach"><p>Independent passenger booking-request service.</p></div>
+<div><strong style="font-size:24px;letter-spacing:1px">COACHLINK</strong><p>Online passenger booking service.</p></div>
 <div><h3>Quick Links</h3><a href="#about">About</a><a href="#ticket">Print Ticket</a><a href="#contact">Get In Touch</a><a href="#how">How It Works</a></div>
 <div><h3>Passenger Services</h3><a href="#booking">Book a Journey</a><a href="#account">My Account</a><a href="#gallery">Amenities</a></div>
-</div><div class="copyright">© 2026 Independent ENA Coach Booking Service</div></footer>
+</div><div class="copyright">© 2026 CoachLink Booking</div></footer>
 <script>
 const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,10);$('date').min=today;$('return-date').min=today;
 let authMode='register',tripType='oneway',loggedIn=false;
-const sampleTrips=[
-{via:'MBITA - RANGWE - MOMBASA',depart:'05:30 PM',arrive:'06:15 AM',duration:'12h 45m',rating:'4.3',seats:45,fare:3000},
-{via:'KEHANCHA - MIGORI - MOMBASA',depart:'05:45 PM',arrive:'06:00 AM',duration:'12h 15m',rating:'4.2',seats:47,fare:3000},
-{via:'KENDUBAY - KISII - MOMBASA',depart:'05:45 PM',arrive:'06:00 AM',duration:'12h 15m',rating:'4.1',seats:46,fare:3000},
-{via:'SORI - RONGO - MOMBASA',depart:'05:45 PM',arrive:'05:55 AM',duration:'12h 10m',rating:'3.9',seats:46,fare:3000}
-];
+const sampleTrips=[];
 $('search-buses').addEventListener('click',()=>{
  const from=$('from').value.trim(),to=$('to').value.trim(),date=$('date').value,box=$('search-results');
  if(!from||!to||!date){box.className='results-panel';box.innerHTML='<div class="no-results">Please enter your departure, destination and travel date first.</div>';box.scrollIntoView({behavior:'smooth'});return}
  box.className='results-panel';
- if(from.toLowerCase()!=='bomet'||to.toLowerCase()!=='mombasa'){box.innerHTML='<div class="no-results">No published sample trips for this route yet. Please check the route details with the transport operator before paying.</div>';box.scrollIntoView({behavior:'smooth'});return}
+ box.innerHTML='<div class="no-results">Live bus schedules are not yet connected. You can submit a booking only after the operator configures a verified fare for this route.</div>';box.scrollIntoView({behavior:'smooth'});return;
  const dateLabel=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{year:'numeric',month:'long',day:'numeric'});
- box.innerHTML='<div class="results-head"><div><h2>'+from.toUpperCase()+' - '+to.toUpperCase()+'</h2><p>'+dateLabel+' · Search Results</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><div class="result-note">Sample trip details supplied for this website. Departure times, routes, seat counts and fares are not live inventory and must be verified before payment.</div>'+sampleTrips.map((t,i)=>'<article class="trip-result"><div><div class="operator"><img src="https://enacoach.co.ke/assets/enacoach/enacoach_logo.png" alt="Independent booking service">'+ 'Highway</div><span class="bus-type">LUXURY</span></div><div><div class="route-line"><div class="route-stop"><strong>'+t.depart+'</strong><small>BOMET · Boarding</small></div><div class="duration">'+t.duration+'</div><div class="route-stop"><strong>'+t.arrive+'</strong><small>MOMBASA · Dropping</small></div></div><div style="font-weight:700;margin-top:9px">'+t.via+'</div><div class="trip-meta"><span>★ '+t.rating+'</span><span>('+t.seats+' seats left · sample)</span><span>Wi-Fi</span><span>Power outlets</span><span>Extra legroom</span></div></div><div class="fare"><small>Normal fare</small><strong>KSh '+t.fare.toLocaleString('en-KE')+'</strong><button type="button" data-trip-index="'+i+'">Select Trip</button></div></article>').join('');
+ box.innerHTML='<div class="results-head"><div><h2>'+from.toUpperCase()+' - '+to.toUpperCase()+'</h2><p>'+dateLabel+' · Search Results</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><div class="result-note">Sample trip details supplied for this website. Departure times, routes, seat counts and fares are not live inventory and must be verified before payment.</div>'+sampleTrips.map((t,i)=>'<article class="trip-result"><div><div class="operator"><img src="" alt="Independent booking service">'+ 'Highway</div><span class="bus-type">LUXURY</span></div><div><div class="route-line"><div class="route-stop"><strong>'+t.depart+'</strong><small>BOMET · Boarding</small></div><div class="duration">'+t.duration+'</div><div class="route-stop"><strong>'+t.arrive+'</strong><small>MOMBASA · Dropping</small></div></div><div style="font-weight:700;margin-top:9px">'+t.via+'</div><div class="trip-meta"><span>★ '+t.rating+'</span><span>('+t.seats+' seats left · sample)</span><span>Wi-Fi</span><span>Power outlets</span><span>Extra legroom</span></div></div><div class="fare"><small>Normal fare</small><strong>KSh '+t.fare.toLocaleString('en-KE')+'</strong><button type="button" data-trip-index="'+i+'">Select Trip</button></div></article>').join('');
  box.querySelectorAll('[data-trip-index]').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('[data-trip-index]').forEach(b=>b.textContent='Select Trip');btn.textContent='Selected';$('from').value='Bomet';$('to').value='Mombasa';$('date').value=date;$('booking').scrollIntoView({behavior:'smooth'});$('result').className='result success';$('result').textContent='Trip selected. Log in if needed, then submit your booking request below. Fare shown is sample information and is not verified.'}));
  $('modify-trip').addEventListener('click',()=>$('booking').scrollIntoView({behavior:'smooth'}));
  box.scrollIntoView({behavior:'smooth'});
@@ -106,12 +101,46 @@ $('search-buses').addEventListener('click',()=>{
 
 document.querySelectorAll('.trip-tab').forEach(btn=>btn.addEventListener('click',()=>{tripType=btn.dataset.trip;document.querySelectorAll('.trip-tab').forEach(b=>b.classList.toggle('active',b===btn));$('return-wrap').classList.toggle('show',tripType==='round');$('return-date').required=tripType==='round'}));
 function authMessage(text,error=true){const el=$('auth-message');el.className='result '+(error?'error':'success');el.textContent=text}
-function setAccount(account){loggedIn=!!account;$('auth-form').classList.toggle('hidden',loggedIn);$('account-status').classList.toggle('hidden',!loggedIn);$('account-greeting').textContent=account?'Logged in as '+account.full_name+' ('+account.phone+').':'';$('auth-title').textContent='My Account';$('auth-intro').textContent=loggedIn?'You are signed in and can submit a booking.':'Create an account or log in to manage your booking requests.';$('booking-form').querySelectorAll('input,select').forEach(el=>el.disabled=false);$('submit').disabled=!loggedIn;$('submit').title=loggedIn?'Submit your booking request':'Log in to submit a booking request';$('search-buses').disabled=false}
+function setAccount(account){loggedIn=!!account;if(account && $('payment-phone')) $('payment-phone').value=account.phone||'';$('auth-form').classList.toggle('hidden',loggedIn);$('account-status').classList.toggle('hidden',!loggedIn);$('account-greeting').textContent=account?'Logged in as '+account.full_name+' ('+account.phone+').':'';$('auth-title').textContent='My Account';$('auth-intro').textContent=loggedIn?'You are signed in and can submit a booking.':'Create an account or log in to manage your booking requests.';$('booking-form').querySelectorAll('input,select').forEach(el=>el.disabled=false);$('submit').disabled=!loggedIn;$('submit').title=loggedIn?'Submit your booking request':'Log in to submit a booking request';$('search-buses').disabled=false}
 function mode(value){authMode=value;$('auth-name').required=value==='register';$('auth-name-wrap').classList.toggle('hidden',value==='login');$('auth-password').autocomplete(value==='login'?'current-password':'new-password');$('auth-password').placeholder=value==='login'?'Enter your password':'Create a password';$('auth-submit').textContent=value==='login'?'Login':'Create Account';$('auth-switch-text').textContent=value==='login'?'New passenger?':'Already registered?';$('auth-switch').textContent=value==='login'?'Create Account':'Login';$('auth-message').className='hidden'}
 $('auth-switch').addEventListener('click',()=>mode(authMode==='register'?'login':'register'));
 $('auth-form').addEventListener('submit',async e=>{e.preventDefault();const btn=$('auth-submit');btn.disabled=true;btn.textContent='Please wait…';try{const payload={phone:$('auth-phone').value.trim(),password:$('auth-password').value};if(authMode==='register')payload.fullName=$('auth-name').value.trim();const r=await fetch('/api/auth/'+(authMode==='register'?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not process account.');setAccount(data.account);$('auth-form').reset();$('auth-message').className='hidden'}catch(err){authMessage(err.message)}finally{btn.disabled=false;btn.textContent=authMode==='login'?'Login':'Create Account'}});
 $('logout').addEventListener('click',async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'});setAccount(null);mode('login')});
-$('booking-form').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submit'),box=$('result');btn.disabled=true;btn.textContent='Submitting…';box.className='hidden';const payload={from:$('from').value.trim(),to:$('to').value.trim(),travelDate:$('date').value,passengers:Number($('pax').value),tripType,returnDate:tripType==='round' ? $('return-date').value : null};try{const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not save booking.');box.className='result success';box.innerHTML='<strong>Booking received. Reference: '+data.reference+'</strong><p style="margin:10px 0 5px">Pay using M-Pesa:</p><ol style="margin:5px 0 10px;padding-left:22px"><li>Open M-Pesa</li><li>Select Lipa na M-Pesa</li><li>Select Buy Goods and Services</li><li>Enter Till Number <strong>4831168</strong></li><li>Enter the fare for your journey and confirm payment</li></ol><p style="margin:5px 0">Keep your M-Pesa confirmation message. Payment is not automatically verified on this website.</p>';$('booking-form').reset();$('date').min=today;$('return-wrap').classList.remove('show');$('return-date').required=false;tripType='oneway';document.querySelectorAll('.trip-tab').forEach(b=>b.classList.toggle('active',b.dataset.trip==='oneway'))}catch(err){box.className='result error';box.textContent=err.message}finally{btn.disabled=false;btn.textContent='Book Now'}});
+async function checkPayment(reference) {
+ const box=$('result');
+ try {
+  const r=await fetch('/api/payments/status/'+encodeURIComponent(reference),{credentials:'same-origin'});
+  const data=await r.json();
+  if(!r.ok) throw Error(data.error||'Could not check payment.');
+  if(data.status==='paid'){box.className='result success';box.innerHTML='<strong>PAYMENT CONFIRMED</strong><p>Booking reference: '+reference+'</p><p>M-Pesa receipt: '+(data.receipt||'Confirmed')+'</p><p>Your booking is marked PAID.</p>';return 'paid';}
+  if(data.status==='failed'){box.className='result error';box.textContent='M-Pesa payment was not completed. Try again using the same booking reference.';return 'failed';}
+  box.className='result status';box.textContent='Booking '+reference+': '+data.message;return data.status;
+ } catch(err){box.className='result error';box.textContent=err.message;return 'error';}
+}
+async function startPayment(reference,phone) {
+ const box=$('result');box.className='result status';box.textContent='Sending M-Pesa prompt…';
+ try {
+  const r=await fetch('/api/payments/stk-push',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({reference,phone})});
+  const data=await r.json();if(!r.ok) throw Error(data.error||'Could not start M-Pesa payment.');
+  box.className='result status';box.textContent='M-Pesa prompt sent. Check '+phone+' and enter your PIN. Waiting for Safaricom confirmation…';
+  let attempts=0;const timer=setInterval(async()=>{attempts++;const state=await checkPayment(reference);if(state==='paid'||state==='failed'||attempts>=15)clearInterval(timer);},4000);
+ } catch(err) {
+  box.className='result error';box.innerHTML='<strong>Booking reference: '+reference+'</strong><p>'+err.message+'</p><button type="button" id="retry-payment" class="submit">Try M-Pesa Again</button>';
+  $('retry-payment').addEventListener('click',()=>startPayment(reference,phone));
+ }
+}
+$('booking-form').addEventListener('submit',async e=>{
+ e.preventDefault();const btn=$('submit'),box=$('result');btn.disabled=true;btn.textContent='Submitting…';box.className='hidden';
+ const payload={from:$('from').value.trim(),to:$('to').value.trim(),travelDate:$('date').value,passengers:Number($('pax').value),tripType,returnDate:tripType==='round' ? $('return-date').value : null};
+ try {
+  const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});
+  const data=await r.json();if(!r.ok)throw Error(data.error||'Could not save booking.');
+  box.className='result status';box.innerHTML='<strong>Booking created: '+data.reference+'</strong><p>Total fare: KSh '+Number(data.amountKes).toLocaleString('en-KE')+'</p>';
+  const phone=$('payment-phone').value.trim()||data.phone||'';await startPayment(data.reference,phone);
+ } catch(err){box.className='result error';box.textContent=err.message;}
+ finally{btn.disabled=!loggedIn;btn.textContent='Submit Booking Request';}
+});
+
 (async()=>{try{const r=await fetch('/api/auth/me',{credentials:'same-origin'});if(r.ok){const data=await r.json();setAccount(data.account)}else setAccount(null)}catch{setAccount(null)}})();
 </script>
 </body></html>
