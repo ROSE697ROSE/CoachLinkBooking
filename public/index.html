@@ -1,55 +1,33 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#123b32"><title>ENA Coach Booking</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#123b32"><title>ENA Coach Booking</title>
 <style>
-:root{--g:#123b32;--gold:#f2b544;--ink:#17211e;--muted:#66736e;--bg:#f4f7f5}
-*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,sans-serif;color:var(--ink);background:var(--bg)}
-header{background:var(--g);color:white;padding:18px max(20px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-header strong{font-size:1.35rem}.hero{background:linear-gradient(120deg,#123b32,#1e5b4b);color:white;padding:48px 20px 66px}
-.wrap{max-width:1080px;margin:auto}.hero h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.1;margin:0 0 12px}
-.hero p{color:#d9e7df}.panel{background:white;padding:22px;border-radius:16px;margin:26px auto 0;box-shadow:0 14px 35px #061c1526;color:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;font-size:.82rem;font-weight:700;margin-bottom:6px}
-.field input,.field select{width:100%;padding:13px;border:1px solid #d7dfda;border-radius:9px;font:inherit}
-.btn{background:var(--gold);border:0;border-radius:9px;padding:14px 20px;font:inherit;font-weight:800;margin-top:17px;cursor:pointer;width:100%}
-.content{padding:34px 20px 60px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:white;border:1px solid #e3eae5;border-radius:13px;padding:18px}
-.muted{color:var(--muted);font-size:.93rem}.notice{background:#fff6e3;border:1px solid #f3d89c;border-radius:10px;padding:14px;margin-top:16px}
-.success{background:#e9f7ee;border:1px solid #b9e0c5;border-radius:10px;padding:14px;margin-top:16px}.hidden{display:none}
-footer{text-align:center;color:var(--muted);padding:24px;font-size:.9rem}
-@media(max-width:650px){.grid,.cards{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#f4f7f5;color:#17211e;font:16px/1.55 Arial,sans-serif}header{background:#123b32;color:#fff;padding:22px 18px;text-align:center}header h1{font-size:26px;margin:0}header p{margin:3px 0 0;color:#dce9e1}.wrap{max-width:850px;margin:34px auto;padding:0 18px}.hero{text-align:center;margin-bottom:24px}.hero h2{font-size:32px;line-height:1.15;margin:0 0 8px;color:#123b32}.hero p{color:#65736c;margin:0}.panel,.step{background:#fff;border:1px solid #e1e8e3;border-radius:12px;padding:22px;box-shadow:0 5px 18px #123b320c}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}.field input,.field select{width:100%;height:46px;border:1px solid #cfd9d2;border-radius:7px;padding:0 12px;font:inherit;background:#fff}.btn{width:100%;margin-top:18px;padding:14px;background:#e9ad32;border:0;border-radius:7px;color:#1d2b22;font-weight:800;font-size:16px;cursor:pointer}.btn:disabled{opacity:.6}.result{margin-top:14px;padding:12px;border-radius:7px;font-weight:700}.success{background:#e8f7ed;color:#176334}.error{background:#fff0ed;color:#8b2b1e}.hidden{display:none}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.step h3{font-size:16px;margin:0 0 6px;color:#123b32}.step p{margin:0;color:#65736c;font-size:14px}.notice{margin-top:20px;padding:16px;border:1px solid #f0d99e;background:#fff8e7;border-radius:9px}.notice p{margin:5px 0 0;color:#65542d;font-size:14px}.disclaimer{color:#6d7972;font-size:13px;margin:18px 0;text-align:center}footer{text-align:center;color:#77827c;padding:12px 18px 28px;font-size:13px}@media(max-width:620px){.grid,.steps{grid-template-columns:1fr}.wrap{margin:24px auto}.panel{padding:17px}.hero h2{font-size:28px}}
 </style></head><body>
-<header><strong>ENA Coach Booking</strong><span>Online booking requests</span></header>
-<section class="hero"><div class="wrap"><h1>Plan your journey.<br>Request your seat.</h1><p>Send your trip and passenger details to create a booking request.</p>
+<header><h1>ENA Coach Booking</h1><p>Online booking requests</p></header>
+<main class="wrap"><section class="hero"><h2>Plan your journey.<br>Request your seat.</h2><p>Send your trip and passenger details to create a booking request.</p></section>
 <form class="panel" id="booking">
 <div class="grid">
 <div class="field"><label for="from">Travelling from</label><input id="from" required placeholder="e.g. Nairobi"></div>
 <div class="field"><label for="to">Travelling to</label><input id="to" required placeholder="e.g. Mombasa"></div>
 <div class="field"><label for="date">Travel date</label><input id="date" type="date" required></div>
-<div class="field"><label for="pax">Passengers</label><select id="pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div class="field"><label for="pax">Passengers</label><select id="pax"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
 <div class="field"><label for="name">Passenger full name</label><input id="name" required autocomplete="name"></div>
 <div class="field"><label for="phone">Phone number</label><input id="phone" required inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX"></div>
-</div>
-<button class="btn" id="submit" type="submit">Submit booking request</button>
-<div id="result" class="hidden" role="status" aria-live="polite"></div>
-</form></div></section>
-<main class="content wrap"><h2>How it works</h2><div class="cards">
-<article class="card"><h3>1. Enter trip details</h3><p class="muted">Choose your route, travel date and passenger count.</p></article>
-<article class="card"><h3>2. Submit request</h3><p class="muted">Your request is saved in the online bookings database.</p></article>
-<article class="card"><h3>3. Await confirmation</h3><p class="muted">The operator must confirm availability, fare and ticket details before payment.</p></article>
-</div>
-<div class="notice"><strong>Payment safety</strong><p class="muted">Do not send money until an authorised ENA Coach representative confirms your booking and provides verified payment instructions. This site does not yet process or verify M-Pesa payments.</p></div>
-<p class="muted">This is an independent booking-request website. It is not an official ENA Coach website. Routes, fares, schedules, seat availability and ticket issuance require confirmation by the operator.</p>
-</main><footer>© <span id="year"></span> ENA Coach Booking</footer>
+</div><button class="btn" id="submit" type="submit">Submit booking request</button><div id="result" class="hidden" role="status" aria-live="polite"></div>
+</form>
+<section style="margin-top:34px"><h2 style="color:#123b32;margin-bottom:8px">How it works</h2><div class="steps">
+<article class="step"><h3>1. Enter trip details</h3><p>Choose your route, travel date and passenger count.</p></article>
+<article class="step"><h3>2. Submit request</h3><p>Your request is saved in the online bookings database.</p></article>
+<article class="step"><h3>3. Await confirmation</h3><p>The operator must confirm availability, fare and ticket details before payment.</p></article>
+</div></section>
+<div class="notice"><strong>Payment safety</strong><p>Do not send money until an authorised ENA Coach representative confirms your booking and provides verified payment instructions. This site does not yet process or verify M-Pesa payments.</p></div>
+<p class="disclaimer">This is an independent booking-request website. It is not an official ENA Coach website. Routes, fares, schedules, seat availability and ticket issuance require confirmation by the operator.</p>
+</main><footer>© 2026 ENA Coach Booking</footer>
 <script>
-const $=id=>document.getElementById(id);
-$('year').textContent=new Date().getFullYear();$('date').min=new Date().toISOString().slice(0,10);
-$('booking').addEventListener('submit',async e=>{
- e.preventDefault();const btn=$('submit'),box=$('result');btn.disabled=true;btn.textContent='Submitting…';box.className='hidden';
- const payload={from:$('from').value.trim(),to:$('to').value.trim(),travelDate:$('date').value,passengers:Number($('pax').value),passengerName:$('name').value.trim(),phone:$('phone').value.trim()};
- try{const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Could not save booking.');
- box.className='success';box.textContent='Booking request saved. Reference: '+data.reference+'. Status: Pending operator confirmation. Keep this reference.';$('booking').reset();$('date').min=new Date().toISOString().slice(0,10);
- }catch(err){box.className='notice';box.textContent=err.message+' Please try again later.'}
- finally{btn.disabled=false;btn.textContent='Submit booking request'}
-});
+const $=id=>document.getElementById(id);const today=new Date().toISOString().slice(0,10);$('date').min=today;
+$('booking').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submit'),box=$('result');btn.disabled=true;btn.textContent='Submitting…';box.className='hidden';
+const payload={from:$('from').value.trim(),to:$('to').value.trim(),travelDate:$('date').value,passengers:Number($('pax').value),passengerName:$('name').value.trim(),phone:$('phone').value.trim()};
+try{const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await r.json();if(!r.ok)throw new Error(data.error||'Could not save booking.');box.className='result success';box.textContent='Booking request saved. Reference: '+data.reference+'. Status: Pending operator confirmation.';$('booking').reset();$('date').min=today}
+catch(err){box.className='result error';box.textContent=err.message+' Please try again later.'}
+finally{btn.disabled=false;btn.textContent='Submit booking request'}});
 </script></body></html>
