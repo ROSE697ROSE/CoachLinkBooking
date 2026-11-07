@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ena-coach-booking
+    name: ena-coach-booking-api
     runtime: node
     plan: free
     region: singapore
