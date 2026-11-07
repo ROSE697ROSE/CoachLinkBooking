@@ -2,6 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const path = require('path');
+const routeData = require('./route-fares.json');
 const QRCode = require('qrcode');
 const { promisify } = require('util');
 const scrypt = promisify(crypto.scrypt);
@@ -86,12 +87,12 @@ function normalisePhone(value) {
   return null;
 }
 function getFare(from, to) {
-  let fares;
-  try { fares = JSON.parse(process.env.ROUTE_FARES_JSON || '{}'); } catch { throw new Error('ROUTE_FARES_JSON must contain valid JSON.'); }
-  const key = from.trim().toLowerCase() + '|' + to.trim().toLowerCase();
-  const value = fares[key];
-  if (!Number.isInteger(value) || value < 1) return null;
-  return value;
+  const a = from.trim().toLowerCase(), b = to.trim().toLowerCase();
+  const match = routeData.routes.find(r =>
+    (r.from.toLowerCase() === a && r.to.toLowerCase() === b) ||
+    (r.from.toLowerCase() === b && r.to.toLowerCase() === a)
+  );
+  return match && Number.isInteger(match.fare) && match.fare > 0 ? match.fare : null;
 }
 function mpesaConfig() {
   const env = (process.env.MPESA_ENV || 'sandbox').toLowerCase();
@@ -129,6 +130,17 @@ function callbackItems(items) {
   for (const item of items || []) if (item && item.Name) out[item.Name] = item.Value;
   return out;
 }
+
+app.get('/api/routes', (_req, res) => {
+  const unique = new Map();
+  for (const route of routeData.routes) {
+    const key = route.from.toLowerCase() + '|' + route.to.toLowerCase();
+    if (!unique.has(key)) unique.set(key, { from: route.from, to: route.to, fare: route.fare, corridor: route.corridor });
+    const reverseKey = route.to.toLowerCase() + '|' + route.from.toLowerCase();
+    if (!unique.has(reverseKey)) unique.set(reverseKey, { from: route.to, to: route.from, fare: route.fare, corridor: route.corridor });
+  }
+  res.json({ source: routeData.source, lastVerified: routeData.lastVerified, currency: routeData.currency, routes: [...unique.values()] });
+});
 
 app.get('/api/health', async (_req, res) => {
   try { await initialise(); await db().query('SELECT 1'); res.json({ ok: true, database: 'connected', payments: 'Daraja configured only when Render environment variables are set' }); }
