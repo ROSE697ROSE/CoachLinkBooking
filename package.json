@@ -1,0 +1,9 @@
+{
+  "name": "ena-coach-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENA Coach booking request website",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^5.1.0", "pg": "^8.16.3" }
+}
