@@ -38,12 +38,12 @@ app.get('/api/health', async (_req, res) => {
 });
 app.post('/api/bookings', async (req, res) => {
   const { from, to, travelDate, passengers, passengerName, phone } = req.body || {};
-  if (![from,to,travelDate,passengerName,phone].every(v => typeof v === 'string' && v.trim()) ||
+  if (![from, to, travelDate, passengerName, phone].every(v => typeof v === 'string' && v.trim()) ||
       !Number.isInteger(passengers) || passengers < 1 || passengers > 5 ||
-      !/^\\d{4}-\\d{2}-\\d{2}$/.test(travelDate)) {
+      !/^\d{4}-\d{2}-\d{2}$/.test(travelDate)) {
     return res.status(400).json({ error: 'Please complete all fields with valid details.' });
   }
-  if (new Date(travelDate + 'T00:00:00Z') < new Date(new Date().toISOString().slice(0,10) + 'T00:00:00Z')) {
+  if (new Date(travelDate + 'T00:00:00Z') < new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')) {
     return res.status(400).json({ error: 'Travel date cannot be in the past.' });
   }
   try {
@@ -60,5 +60,4 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.listen(port, () => console.log('ENA Coach booking server listening on ' + port));
