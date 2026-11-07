@@ -135,7 +135,7 @@ app.get('/api/routes', (_req, res) => {
   const unique = new Map();
   for (const route of routeData.routes) {
     const key = route.from.toLowerCase() + '|' + route.to.toLowerCase();
-    if (!unique.has(key)) unique.set(key, { from: route.from, to: route.to, fare: route.fare, corridor: route.corridor });
+    if (!unique.has(key)) unique.set(key, { from: route.from, to: route.to, fare: route.fare, corridor: route.routeLabel });
     const reverseKey = route.to.toLowerCase() + '|' + route.from.toLowerCase();
     if (!unique.has(reverseKey)) unique.set(reverseKey, { from: route.to, to: route.from, fare: route.fare, corridor: route.corridor });
   }
