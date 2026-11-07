@@ -2,6 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const path = require('path');
+const QRCode = require('qrcode');
 const { promisify } = require('util');
 const scrypt = promisify(crypto.scrypt);
 const app = express();
@@ -272,6 +273,40 @@ app.get('/api/payments/status/:reference', requireAccount, async (req, res) => {
     const b = result.rows[0];
     res.json({ reference: b.reference, amountKes: b.amount_kes, status: b.payment_status, receipt: b.mpesa_receipt_number, paidAt: b.paid_at, message: b.payment_status === 'paid' ? 'Payment confirmed. Your booking is paid.' : b.payment_status === 'processing' ? 'Waiting for Safaricom payment confirmation.' : b.payment_status === 'failed' ? 'Payment was not completed. You may try again.' : b.payment_status === 'review' ? 'Payment is being checked by support.' : 'Payment has not started.' });
   } catch (e) { console.error('Payment status failed:', e.message); res.status(503).json({ error: 'Could not check payment status.' }); }
+});
+
+app.get('/api/tickets/:reference', requireAccount, async (req, res) => {
+  try {
+    await initialise();
+    const result = await db().query(
+      "SELECT reference, departure, destination, travel_date, passengers, passenger_name, phone, trip_type, return_date, amount_kes, mpesa_receipt_number, paid_at FROM bookings WHERE reference=$1 AND account_id=$2 AND payment_status='paid'",
+      [req.params.reference, req.account.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: 'Paid ticket not found. Complete payment first.' });
+    const ticket = result.rows[0];
+    const issued = ticket.paid_at ? new Date(ticket.paid_at).toISOString() : new Date().toISOString();
+    const signedPayload = ['COACHLINK', ticket.reference, issued].join('|');
+    const signature = crypto.createHmac('sha256', SESSION_SECRET).update(signedPayload).digest('hex');
+    const qrDataUrl = await QRCode.toDataURL(signedPayload + '|' + signature, { errorCorrectionLevel: 'M', margin: 2, width: 260 });
+    res.json({
+      reference: ticket.reference,
+      passenger: ticket.passenger_name,
+      phone: ticket.phone,
+      from: ticket.departure,
+      to: ticket.destination,
+      travelDate: ticket.travel_date,
+      passengers: ticket.passengers,
+      tripType: ticket.trip_type,
+      returnDate: ticket.return_date,
+      amountKes: ticket.amount_kes,
+      mpesaReceipt: ticket.mpesa_receipt_number,
+      issuedAt: issued,
+      qrDataUrl
+    });
+  } catch (e) {
+    console.error('Ticket generation failed:', e.message);
+    res.status(503).json({ error: 'Could not generate ticket. Please try again.' });
+  }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
