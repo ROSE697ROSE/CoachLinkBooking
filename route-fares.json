@@ -1,0 +1,139 @@
+{
+  "source": "K24 Digital report dated 17 July 2026, reporting ENA Coach's revised fare schedule announced 15 July 2026. These are published corridor fares, not live seat availability.",
+  "lastVerified": "2026-07-17",
+  "currency": "KES",
+  "routes": [
+    [
+      "Kisumu",
+      "Nairobi",
+      1700,
+      "Kisumu – Ahero – Nairobi"
+    ],
+    [
+      "Kendu Bay",
+      "Nairobi",
+      1700,
+      "Kendu Bay – Sondu – Kadongo – Nyamira – Nairobi"
+    ],
+    [
+      "Oyugis",
+      "Nairobi",
+      1700,
+      "Oyugis – Kisii – Nairobi"
+    ],
+    [
+      "Mbita",
+      "Nairobi",
+      1700,
+      "Mbita – Homa Bay – Kisii – Nairobi"
+    ],
+    [
+      "Sori",
+      "Nairobi",
+      1700,
+      "Sori – Ndhiwa – Rodi – Rangwe – Nairobi"
+    ],
+    [
+      "Sirare",
+      "Nairobi",
+      1700,
+      "Sirare – Migori – Bomet – Nairobi"
+    ],
+    [
+      "Kehancha",
+      "Nairobi",
+      1700,
+      "Kehancha – Awendo – Narok – Nairobi"
+    ],
+    [
+      "Port Victoria",
+      "Nairobi",
+      1800,
+      "Port Victoria – Funyula – Bumala – Nairobi"
+    ],
+    [
+      "Busia",
+      "Nairobi",
+      1800,
+      "Busia – Nambale – Nairobi"
+    ],
+    [
+      "Kakamega",
+      "Nairobi",
+      1800,
+      "Kakamega – Kapsabet – Nairobi"
+    ],
+    [
+      "Busia",
+      "Nairobi",
+      1800,
+      "Busia – Kisumu – Nairobi"
+    ],
+    [
+      "Nairobi",
+      "Kendu Bay",
+      1800,
+      "Nairobi – Oyugis – Kendu Bay"
+    ],
+    [
+      "Nyadorera",
+      "Nairobi",
+      1800,
+      "Nyadorera – Siaya – Nakuru – Nairobi"
+    ],
+    [
+      "Usenge",
+      "Nairobi",
+      1800,
+      "Usenge – Bondo – Kericho – Nairobi"
+    ],
+    [
+      "Luanda",
+      "Nairobi",
+      1800,
+      "Luanda – Kotieno – Ndori – Awasi – Nairobi"
+    ],
+    [
+      "Mbale",
+      "Nairobi",
+      1800,
+      "Mbale – Majengo – Kisumu – Nairobi"
+    ],
+    [
+      "Sori",
+      "Mombasa",
+      3000,
+      "Sori – Rongo – Mombasa"
+    ],
+    [
+      "Mbita",
+      "Mombasa",
+      3000,
+      "Mbita – Kisii – Mombasa"
+    ],
+    [
+      "Kendu Bay",
+      "Mombasa",
+      3000,
+      "Kendu Bay – Oyugis – Bomet – Mombasa"
+    ],
+    [
+      "Kehancha",
+      "Mombasa",
+      3000,
+      "Kehancha – Kisii – Sotik – Narok – Mombasa"
+    ],
+    [
+      "Busia",
+      "Mombasa",
+      3000,
+      "Busia – Maseno – Kisumu – Mombasa"
+    ],
+    [
+      "Port Victoria",
+      "Mombasa",
+      3000,
+      "Port Victoria – Siaya – Bondo – Ahero – Mombasa"
+    ]
+  ]
+}
