@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#087b45">
-<title>CoachLink Booking | Independent booking service</title>
+<title>CoachLink Booking | Online Bus Booking</title>
 <style>
 :root{--green:#087b45;--dark:#075b35;--gold:#f3b51b;--ink:#27332c;--muted:#6b756e}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font:15px/1.55 Arial,Helvetica,sans-serif;background:#fff}
@@ -26,7 +26,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 .footer{background:#075b35;color:#fff;margin-top:55px}.footinner{max-width:1160px;margin:auto;padding:34px 22px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.footlogo{width:170px;max-height:55px;object-fit:contain;filter:brightness(0) invert(1)}.footer h3{font-size:16px;margin:0 0 12px}.footer p,.footer a{font-size:13px;color:#d9e9df}.footer a{display:block;text-decoration:none;margin:6px 0}.copyright{text-align:center;border-top:1px solid #ffffff25;padding:14px;font-size:12px;color:#d3e5da}.disclaimer{max-width:1160px;margin:20px auto 0;padding:0 22px;text-align:center;font-size:12px;color:#738078}
 @media(max-width:800px){.head{padding:12px 15px}.logo img{width:145px}.headright{gap:10px}.navinner{padding:0 8px}.nav a{padding:12px 11px;font-size:13px}.hero{height:310px}.hero-caption h1{font-size:27px}.booking-grid{grid-template-columns:1fr 1fr}.amenities,.why-grid,.steps{grid-template-columns:1fr 1fr}.footinner{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.headright .support{display:none}.headright{font-size:12px}.account-link{padding:9px 10px}.navinner{justify-content:center}.nav a{padding:10px 8px;font-size:12px}.hero{height:260px}.hero-caption{padding:65px 18px 24px}.hero-caption h1{font-size:24px}.booking-shell{margin:-30px auto 0;padding:0 12px}.booking-card{padding:17px}.booking-grid,.account-grid{grid-template-columns:1fr}.account-grid .wide{grid-column:auto}.amenities,.why-grid,.steps{grid-template-columns:1fr}.section{margin:42px auto;padding:0 16px}.footinner{grid-template-columns:1fr}.account-box{margin:28px 14px 0;padding:17px}}
-</style>
+@media print{body *{visibility:hidden!important}#ticket-print-area,#ticket-print-area *{visibility:visible!important}#ticket-print-area{position:absolute;left:0;top:0;width:100%;border:0!important}#print-ticket{display:none!important}}\n</style>
 </head>
 <body>
 <div class="topbar"></div>
@@ -112,7 +112,15 @@ async function checkPayment(reference) {
   const r=await fetch('/api/payments/status/'+encodeURIComponent(reference),{credentials:'same-origin'});
   const data=await r.json();
   if(!r.ok) throw Error(data.error||'Could not check payment.');
-  if(data.status==='paid'){box.className='result success';box.innerHTML='<strong>PAYMENT CONFIRMED</strong><p>Booking reference: '+reference+'</p><p>M-Pesa receipt: '+(data.receipt||'Confirmed')+'</p><p>Your booking is marked PAID.</p>';return 'paid';}
+  if(data.status==='paid'){
+   const ticketResponse=await fetch('/api/tickets/'+encodeURIComponent(reference),{credentials:'same-origin'});
+   const ticket=await ticketResponse.json();
+   if(!ticketResponse.ok) throw Error(ticket.error||'Payment confirmed, but ticket generation failed.');
+   box.className='result success';
+   box.innerHTML='<div id="ticket-print-area" style="background:#fff;padding:18px;border:2px solid #087b45;border-radius:5px;color:#243329"><h2 style="color:#087b45;margin:0 0 8px">COACHLINK — E-TICKET</h2><p><strong>Booking:</strong> '+ticket.reference+'</p><p><strong>Passenger:</strong> '+ticket.passenger+'</p><p><strong>Route:</strong> '+ticket.from+' → '+ticket.to+'</p><p><strong>Travel date:</strong> '+String(ticket.travelDate).slice(0,10)+'</p><p><strong>Passengers:</strong> '+ticket.passengers+'</p><p><strong>Amount paid:</strong> KSh '+Number(ticket.amountKes).toLocaleString('en-KE')+'</p><p><strong>M-Pesa receipt:</strong> '+ticket.mpesaReceipt+'</p><img alt="Ticket QR code" src="'+ticket.qrDataUrl+'" style="width:190px;height:190px;display:block;margin:12px auto"><p style="text-align:center;font-size:12px">Present this QR code when boarding.</p></div><button type="button" id="print-ticket" class="submit" style="margin-top:12px">Print Ticket</button>';
+   $('print-ticket').addEventListener('click',()=>window.print());
+   return 'paid';
+  }
   if(data.status==='failed'){box.className='result error';box.textContent='M-Pesa payment was not completed. Try again using the same booking reference.';return 'failed';}
   box.className='result status';box.textContent='Booking '+reference+': '+data.message;return data.status;
  } catch(err){box.className='result error';box.textContent=err.message;return 'error';}
