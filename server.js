@@ -16,7 +16,7 @@ function db() {
   return pool;
 }
 async function initialise() {
-  if (!initPromise) initPromise = db().then(p => p.query(`
+  if (!initPromise) initPromise = db().query(`
     CREATE TABLE IF NOT EXISTS bookings (
       id BIGSERIAL PRIMARY KEY,
       reference VARCHAR(20) UNIQUE NOT NULL,
