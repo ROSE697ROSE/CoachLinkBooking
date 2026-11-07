@@ -88,9 +88,12 @@ const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,1
 let authMode='register',tripType='oneway',loggedIn=false;
 let routeCatalog=[];
 async function loadRoutes(){
- const response=await fetch('/api/routes');
+ const response=await fetch('/api/routes',{headers:{'Accept':'application/json'},cache:'no-store'});
+ const contentType=response.headers.get('content-type')||'';
+ if(!contentType.includes('application/json')) throw new Error('Booking server is updating. Refresh this page in a moment.');
  const data=await response.json();
- if(!response.ok) throw new Error('Route list is temporarily unavailable.');
+ if(!response.ok) throw new Error(data.error||'Route list is temporarily unavailable.');
+ if(!Array.isArray(data.routes)) throw new Error('Route list could not be loaded. Please refresh the page.');
  routeCatalog=data.routes||[];
  $('from').innerHTML='<option value="">Select departure</option>'+[...new Set(routeCatalog.map(r=>r.from))].sort().map(v=>'<option value="'+v+'">'+v+'</option>').join('');
  $('to').innerHTML='<option value="">Select destination</option>';
