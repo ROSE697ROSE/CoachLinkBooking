@@ -39,8 +39,8 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <section class="booking-shell" id="booking"><form class="booking-card" id="booking-form">
 <div class="trip-tabs"><button class="trip-tab active" type="button" data-trip="oneway">One Way</button><button class="trip-tab" type="button" data-trip="round">Round Trip</button></div>
 <div class="booking-grid">
-<div class="field"><label for="from">From</label><input id="from" required placeholder="Departure town"></div>
-<div class="field"><label for="to">To</label><input id="to" required placeholder="Destination town"></div>
+<div class="field"><label for="from">From</label><select id="from" required><option value="">Select departure</option></select></div>
+<div class="field"><label for="to">To</label><select id="to" required><option value="">Select destination</option></select></div>
 <div class="field"><label for="date">Travel Date</label><input id="date" type="date" required></div>
 <div class="field round-field" id="return-wrap"><label for="return-date">Return Date</label><input id="return-date" type="date"></div>
 <div class="field"><label for="payment-phone">M-Pesa Phone Number</label><input id="payment-phone" inputmode="tel" placeholder="07XXXXXXXX"></div><div class="field"><label for="pax">Passengers</label><select id="pax"><option value="1">1 Passenger</option><option value="2">2 Passengers</option><option value="3">3 Passengers</option><option value="4">4 Passengers</option><option value="5">5 Passengers</option></select></div>
@@ -86,20 +86,30 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <script>
 const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,10);$('date').min=today;$('return-date').min=today;
 let authMode='register',tripType='oneway',loggedIn=false;
-const sampleTrips=[
-{via:'MBITA - RANGWE - MOMBASA',depart:'05:30 PM',arrive:'06:15 AM',duration:'12h 45m',rating:'4.3',seats:45,fare:3000},
-{via:'KEHANCHA - MIGORI - MOMBASA',depart:'05:45 PM',arrive:'06:00 AM',duration:'12h 15m',rating:'4.2',seats:47,fare:3000},
-{via:'KENDUBAY - KISII - MOMBASA',depart:'05:45 PM',arrive:'06:00 AM',duration:'12h 15m',rating:'4.1',seats:46,fare:3000},
-{via:'SORI - RONGO - MOMBASA',depart:'05:45 PM',arrive:'05:55 AM',duration:'12h 10m',rating:'3.9',seats:46,fare:3000}
-];
+let routeCatalog=[];
+async function loadRoutes(){
+ const response=await fetch('/api/routes');
+ const data=await response.json();
+ if(!response.ok) throw new Error('Route list is temporarily unavailable.');
+ routeCatalog=data.routes||[];
+ $('from').innerHTML='<option value="">Select departure</option>'+[...new Set(routeCatalog.map(r=>r.from))].sort().map(v=>'<option value="'+v+'">'+v+'</option>').join('');
+ $('to').innerHTML='<option value="">Select destination</option>';
+ $('from').addEventListener('change',()=>{
+  const from=$('from').value;
+  const destinations=[...new Set(routeCatalog.filter(r=>r.from===from).map(r=>r.to))].sort();
+  $('to').innerHTML='<option value="">Select destination</option>'+destinations.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
+ });
+}
+loadRoutes().catch(err=>{ $('search-results').className='results-panel'; $('search-results').textContent=err.message; });
 $('search-buses').addEventListener('click',()=>{
- const from=$('from').value.trim(),to=$('to').value.trim(),date=$('date').value,box=$('search-results');
- if(!from||!to||!date){box.className='results-panel';box.innerHTML='<div class="no-results">Please enter your departure, destination and travel date first.</div>';box.scrollIntoView({behavior:'smooth'});return}
+ const from=$('from').value,to=$('to').value,date=$('date').value,box=$('search-results');
+ if(!from||!to||!date){box.className='results-panel';box.textContent='Please select departure, destination and travel date.';box.scrollIntoView({behavior:'smooth'});return}
+ const route=routeCatalog.find(r=>r.from===from&&r.to===to);
  box.className='results-panel';
- if(from.toLowerCase()!=='bomet'||to.toLowerCase()!=='mombasa'){box.innerHTML='<div class="no-results">No saved sample trips are available for this route yet. Confirm the route and fare with the transport operator before booking.</div>';box.scrollIntoView({behavior:'smooth'});return}
+ if(!route){box.innerHTML='<div class="no-results">This route has no published fare in the current route list.</div>';box.scrollIntoView({behavior:'smooth'});return}
  const dateLabel=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{year:'numeric',month:'long',day:'numeric'});
- box.innerHTML='<div class="results-head"><div><h2>'+from.toUpperCase()+' - '+to.toUpperCase()+'</h2><p>'+dateLabel+'</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px;padding:12px 15px;background:#f4f7f5;border:1px solid #e1e9e3;color:#405347;font-size:13px;font-weight:700"><span>Boarding</span><span>Dropping</span><span>Departure</span><span>Amenities</span></div><div style="font-size:16px;font-weight:800;color:#33473a;margin:0 0 12px">Search Result <span style="color:var(--green)">4 Found</span></div><div class="result-note">Four sample trip entries recovered from website history. Times, seat counts and KSh 3,000 fares are not live or operator-verified. Confirm them before accepting payment.</div>'+sampleTrips.map((t,i)=>'<article class="trip-result"><div><div class="operator"><span style="display:grid;place-items:center;width:54px;height:42px;background:#087b45;color:white;border-radius:4px;font-size:21px">▰</span><strong>CoachLink</strong></div><span class="bus-type">LUXURY</span></div><div><div class="route-line"><div class="route-stop"><strong>'+t.depart+'</strong><small>BOMET · Boarding</small></div><div class="duration">'+t.duration+'</div><div class="route-stop"><strong>'+t.arrive+'</strong><small>MOMBASA · Dropping</small></div></div><div style="font-weight:700;margin-top:9px">'+t.via+'</div><div class="trip-meta"><span>★ '+t.rating+'</span><span>('+t.seats+' seats left)</span><span>Wi-Fi</span><span>Power outlets</span><span>Extra legroom</span></div></div><div class="fare"><small>Sample fare</small><strong>KSh '+t.fare.toLocaleString('en-KE')+'</strong><button type="button" data-trip-index="'+i+'">Select Trip</button></div></article>').join('');
- box.querySelectorAll('[data-trip-index]').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('[data-trip-index]').forEach(b=>b.textContent='Select Trip');btn.textContent='Selected';$('from').value='Bomet';$('to').value='Mombasa';$('date').value=date;$('result').className='result status';$('result').textContent='Trip selected.';$('booking').scrollIntoView({behavior:'smooth'})}));
+ box.innerHTML='<div class="results-head"><div><h2>'+from+' – '+to+'</h2><p>'+dateLabel+'</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><article class="trip-result"><div><strong>CoachLink</strong><div class="bus-type">FARE LISTED</div></div><div><div class="route-line"><div class="route-stop"><strong>'+from+'</strong><small>Departure</small></div><div class="duration">Published route</div><div class="route-stop"><strong>'+to+'</strong><small>Destination</small></div></div><div style="font-weight:700;margin-top:9px">'+(route.corridor||'ENA published route corridor')+'</div><div class="trip-meta"><span>Fare source: published ENA fare report</span><span>Departure time and seat availability require operator confirmation</span></div></div><div class="fare"><small>One-way fare / passenger</small><strong>KSh '+Number(route.fare).toLocaleString('en-KE')+'</strong><button type="button" id="select-route">Select Route</button></div></article><div class="result-note">Fare reference: published ENA Coach schedule reported 17 July 2026. This is not a live timetable or live seat inventory.</div>';
+ $('select-route').addEventListener('click',()=>{$('result').className='result status';$('result').textContent='Route selected. Confirm departure and seat availability before payment.';$('booking').scrollIntoView({behavior:'smooth'})});
  $('modify-trip').addEventListener('click',()=>$('booking').scrollIntoView({behavior:'smooth'}));
  box.scrollIntoView({behavior:'smooth'});
 });
