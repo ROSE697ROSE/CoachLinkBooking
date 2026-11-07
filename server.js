@@ -29,7 +29,7 @@ async function initialise() {
       status VARCHAR(30) NOT NULL DEFAULT 'pending_operator_confirmation',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
-  `));
+  `);
   return initPromise;
 }
 app.get('/api/health', async (_req, res) => {
