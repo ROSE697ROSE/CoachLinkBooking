@@ -39,6 +39,7 @@ async function initialise() {
     ];
     for (const sql of migrations) await db().query(sql);
     await db().query("CREATE UNIQUE INDEX IF NOT EXISTS bookings_checkout_request_unique ON bookings(checkout_request_id) WHERE checkout_request_id IS NOT NULL");
+    await db().query("CREATE UNIQUE INDEX IF NOT EXISTS bookings_mpesa_receipt_unique ON bookings(mpesa_receipt_number) WHERE mpesa_receipt_number IS NOT NULL");
   })().catch(error => {
     initPromise = null;
     throw error;
@@ -147,14 +148,15 @@ app.get('/api/health', async (_req, res) => {
   catch (e) { res.status(503).json({ ok: false, database: 'not_connected', error: e.message }); }
 });
 app.post('/api/auth/register', async (req, res) => {
-  const { fullName, phone, password } = req.body || {};
-  if (typeof fullName !== 'string' || fullName.trim().length < 2 || fullName.trim().length > 120 || typeof phone !== 'string' || !/^\\+?[0-9\\s-]{9,20}$/.test(phone.trim()) || typeof password !== 'string' || password.length < 8 || password.length > 128)
-    return res.status(400).json({ error: 'Enter your full name, a valid phone number and a password of at least 8 characters.' });
+  const { fullName, phone: suppliedPhone, password } = req.body || {};
+  const phone = normalisePhone(suppliedPhone);
+  if (typeof fullName !== 'string' || fullName.trim().length < 2 || fullName.trim().length > 120 || !phone || typeof password !== 'string' || password.length < 8 || password.length > 128)
+    return res.status(400).json({ error: 'Enter your full name, a valid Kenyan phone number and a password of at least 8 characters.' });
   try {
     await initialise();
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = (await scrypt(password, salt, 64)).toString('hex');
-    const result = await db().query('INSERT INTO accounts (full_name, phone, password_hash) VALUES ($1,$2,$3) RETURNING id, full_name, phone', [fullName.trim(), phone.trim(), salt + ':' + hash]);
+    const result = await db().query('INSERT INTO accounts (full_name, phone, password_hash) VALUES ($1,$2,$3) RETURNING id, full_name, phone', [fullName.trim(), phone, salt + ':' + hash]);
     setSession(res, result.rows[0].id);
     res.status(201).json({ account: result.rows[0] });
   } catch (e) {
@@ -163,11 +165,13 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 app.post('/api/auth/login', async (req, res) => {
-  const { phone, password } = req.body || {};
-  if (typeof phone !== 'string' || typeof password !== 'string' || !phone.trim() || !password) return res.status(400).json({ error: 'Enter your phone number and password.' });
+  const { phone: suppliedPhone, password } = req.body || {};
+  const phone = normalisePhone(suppliedPhone);
+  if (!phone || typeof password !== 'string' || !password) return res.status(400).json({ error: 'Enter a valid Kenyan phone number and your password.' });
   try {
     await initialise();
-    const result = await db().query('SELECT id, full_name, phone, password_hash FROM accounts WHERE phone = $1', [phone.trim()]);
+    const localPhone = '0' + phone.slice(3);
+    const result = await db().query("SELECT id, full_name, phone, password_hash FROM accounts WHERE regexp_replace(phone, '[^0-9]', '', 'g') IN ($1,$2) ORDER BY CASE WHEN regexp_replace(phone, '[^0-9]', '', 'g')=$1 THEN 0 ELSE 1 END LIMIT 1", [phone, localPhone]);
     if (!result.rowCount) return res.status(401).json({ error: 'Incorrect phone number or password.' });
     const account = result.rows[0], parts = account.password_hash.split(':');
     const candidate = await scrypt(password, parts[0], 64), stored = Buffer.from(parts[1], 'hex');
@@ -178,6 +182,20 @@ app.post('/api/auth/login', async (req, res) => {
 });
 app.get('/api/auth/me', requireAccount, (req, res) => res.json({ account: req.account }));
 app.post('/api/auth/logout', (_req, res) => { clearSession(res); res.json({ ok: true }); });
+
+app.get('/api/bookings', requireAccount, async (req, res) => {
+  try {
+    await initialise();
+    const result = await db().query(
+      'SELECT reference, departure, destination, travel_date, passengers, trip_type, return_date, amount_kes, status, payment_status, mpesa_receipt_number, created_at FROM bookings WHERE account_id=$1 ORDER BY created_at DESC LIMIT 50',
+      [req.account.id]
+    );
+    res.json({ bookings: result.rows });
+  } catch (e) {
+    console.error('Booking history failed:', e.message);
+    res.status(503).json({ error: 'Could not load your bookings. Please try again.' });
+  }
+});
 
 app.post('/api/bookings', requireAccount, async (req, res) => {
   const { from, to, travelDate, passengers, tripType = 'oneway', returnDate = null } = req.body || {};
@@ -266,8 +284,8 @@ app.post('/api/payments/callback', async (req, res) => {
       return res.json({ Result: 'Accepted' });
     }
     const updated = await db().query(
-      "UPDATE bookings SET payment_status='paid', status='paid', mpesa_receipt_number=$1, payment_result=$2, paid_at=NOW() WHERE checkout_request_id=$3 AND amount_kes=$4 AND payment_status <> 'paid' RETURNING reference",
-      [receipt, 'Safaricom confirmed payment; phone=' + phone + '; transactionDate=' + (transactionDate || ''), callback.CheckoutRequestID, amount]
+      "UPDATE bookings SET payment_status='paid', status='paid', mpesa_receipt_number=$1, payment_result=$2, paid_at=NOW() WHERE checkout_request_id=$3 AND amount_kes=$4 AND payment_phone=$5 AND payment_status='processing' RETURNING reference",
+      [receipt, 'Safaricom confirmed payment; phone=' + phone + '; transactionDate=' + (transactionDate || ''), callback.CheckoutRequestID, amount, phone]
     );
     if (!updated.rowCount) {
       await db().query("UPDATE bookings SET payment_status='review', payment_result=$1 WHERE checkout_request_id=$2 AND payment_status <> 'paid'", ['Payment callback amount did not match booking or booking was not found', callback.CheckoutRequestID]);
@@ -324,5 +342,11 @@ app.get('/api/tickets/:reference', requireAccount, async (req, res) => {
   }
 });
 
+app.use('/api', (_req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use((err, req, res, _next) => {
+  console.error('Unhandled request error:', err.message);
+  if (req.path.startsWith('/api/')) return res.status(500).json({ error: 'The service could not complete this request. Please try again.' });
+  res.status(500).send('The service could not complete this request.');
+});
 app.listen(port, () => console.log('CoachLinkBooking server listening on ' + port));

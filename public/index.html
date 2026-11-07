@@ -44,7 +44,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <div class="field"><label for="date">Travel Date</label><input id="date" type="date" required></div>
 <div class="field round-field" id="return-wrap"><label for="return-date">Return Date</label><input id="return-date" type="date"></div>
 <div class="field"><label for="payment-phone">M-Pesa Phone Number</label><input id="payment-phone" inputmode="tel" placeholder="07XXXXXXXX"></div><div class="field"><label for="pax">Passengers</label><select id="pax"><option value="1">1 Passenger</option><option value="2">2 Passengers</option><option value="3">3 Passengers</option><option value="4">4 Passengers</option><option value="5">5 Passengers</option></select></div>
-<button class="search-btn" id="search-buses" type="button">Search Buses</button><button class="submit" id="submit" type="submit">Submit Booking Request</button>
+<button class="search-btn" id="search-buses" type="button">Search Fares</button><button class="submit" id="submit" type="submit">Submit Booking Request</button>
 </div><div id="result" class="hidden" role="status" aria-live="polite"></div>
 </form></section>
 <section id="search-results" class="results-panel hidden" aria-live="polite"></section>
@@ -56,6 +56,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 </div><button class="authbtn" id="auth-submit" type="submit">Create Account</button><p id="auth-message" class="hidden" role="status"></p></form>
 <p style="margin:13px 0 0;text-align:center"><span id="auth-switch-text">Already registered?</span> <button type="button" id="auth-switch" class="switch">Login</button></p>
 <div id="account-status" class="status hidden"><span id="account-greeting"></span> <button type="button" id="logout" class="switch">Log out</button></div>
+<div id="booking-history" class="hidden" style="margin-top:18px"><h3 style="color:var(--green);margin:0 0 10px">My bookings</h3><div id="booking-history-list"></div></div>
 </section>
 <section class="section" id="about"><h2>Amenities</h2><p class="lead">Offering comfortable travel for your journey</p>
 <div class="amenities">
@@ -87,12 +88,17 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,10);$('date').min=today;$('return-date').min=today;
 let authMode='register',tripType='oneway',loggedIn=false;
 let routeCatalog=[];
+async function apiJson(response){
+ const type=response.headers.get('content-type')||'';
+ const data=type.includes('application/json')?await response.json():{};
+ if(!response.ok) throw new Error(data.error||'The server is temporarily unavailable. Please try again.');
+ return data;
+}
 async function loadRoutes(){
  const response=await fetch('/api/routes',{headers:{'Accept':'application/json'},cache:'no-store'});
  const contentType=response.headers.get('content-type')||'';
  if(!contentType.includes('application/json')) throw new Error('Booking server is updating. Refresh this page in a moment.');
- const data=await response.json();
- if(!response.ok) throw new Error(data.error||'Route list is temporarily unavailable.');
+ const data=await apiJson(response);
  if(!Array.isArray(data.routes)) throw new Error('Route list could not be loaded. Please refresh the page.');
  routeCatalog=data.routes||[];
  $('from').innerHTML='<option value="">Select departure</option>'+[...new Set(routeCatalog.map(r=>r.from))].sort().map(v=>'<option value="'+v+'">'+v+'</option>').join('');
@@ -111,27 +117,48 @@ $('search-buses').addEventListener('click',()=>{
  box.className='results-panel';
  if(!route){box.innerHTML='<div class="no-results">This route has no published fare in the current route list.</div>';box.scrollIntoView({behavior:'smooth'});return}
  const dateLabel=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{year:'numeric',month:'long',day:'numeric'});
- box.innerHTML='<div class="results-head"><div><h2>'+from+' – '+to+'</h2><p>'+dateLabel+'</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><article class="trip-result"><div><strong>CoachLink</strong><div class="bus-type">FARE LISTED</div></div><div><div class="route-line"><div class="route-stop"><strong>'+from+'</strong><small>Departure</small></div><div class="duration">Published route</div><div class="route-stop"><strong>'+to+'</strong><small>Destination</small></div></div><div style="font-weight:700;margin-top:9px">'+(route.corridor||'ENA published route corridor')+'</div><div class="trip-meta"><span>Fare source: published ENA fare report</span><span>Departure time and seat availability require operator confirmation</span></div></div><div class="fare"><small>One-way fare / passenger</small><strong>KSh '+Number(route.fare).toLocaleString('en-KE')+'</strong><button type="button" id="select-route">Select Route</button></div></article><div class="result-note">Fare reference: published ENA Coach schedule reported 17 July 2026. This is not a live timetable or live seat inventory.</div>';
+ box.innerHTML='<div class="results-head"><div><h2>'+from+' – '+to+'</h2><p>'+dateLabel+'</p></div><button class="switch" type="button" id="modify-trip">Modify Trip</button></div><article class="trip-result"><div><strong>CoachLink</strong><div class="bus-type">PUBLISHED FARE</div></div><div><div class="route-line"><div class="route-stop"><strong>'+from+'</strong><small>Departure</small></div><div class="duration">Fare reference</div><div class="route-stop"><strong>'+to+'</strong><small>Destination</small></div></div><div style="font-weight:700;margin-top:9px">'+(route.corridor||'ENA published route corridor')+'</div><div class="trip-meta"><span>Fare source: published ENA fare report</span><span>No live departure times or seat inventory available</span></div></div><div class="fare"><small>One-way fare / passenger</small><strong>KSh '+Number(route.fare).toLocaleString('en-KE')+'</strong><button type="button" id="select-route">Select Route</button></div></article><div class="result-note">Fare reference: published ENA Coach schedule reported 17 July 2026. This is a fare reference only, not a live timetable or seat inventory.</div>';
  $('select-route').addEventListener('click',()=>{$('result').className='result status';$('result').textContent='Route selected. Confirm departure and seat availability before payment.';$('booking').scrollIntoView({behavior:'smooth'})});
  $('modify-trip').addEventListener('click',()=>$('booking').scrollIntoView({behavior:'smooth'}));
  box.scrollIntoView({behavior:'smooth'});
 });
 document.querySelectorAll('.trip-tab').forEach(btn=>btn.addEventListener('click',()=>{tripType=btn.dataset.trip;document.querySelectorAll('.trip-tab').forEach(b=>b.classList.toggle('active',b===btn));$('return-wrap').classList.toggle('show',tripType==='round');$('return-date').required=tripType==='round'}));
 function authMessage(text,error=true){const el=$('auth-message');el.className='result '+(error?'error':'success');el.textContent=text}
-function setAccount(account){loggedIn=!!account;if(account && $('payment-phone')) $('payment-phone').value=account.phone||'';$('auth-form').classList.toggle('hidden',loggedIn);$('account-status').classList.toggle('hidden',!loggedIn);$('account-greeting').textContent=account?'Logged in as '+account.full_name+' ('+account.phone+').':'';$('auth-title').textContent='My Account';$('auth-intro').textContent=loggedIn?'You are signed in and can submit a booking.':'Create an account or log in to manage your booking requests.';$('booking-form').querySelectorAll('input,select').forEach(el=>el.disabled=false);$('submit').disabled=!loggedIn;$('submit').title=loggedIn?'Submit your booking request':'Log in to submit a booking request';$('search-buses').disabled=false}
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function setAccount(account){loggedIn=!!account;if(account && $('payment-phone')) $('payment-phone').value=account.phone||'';$('auth-form').classList.toggle('hidden',loggedIn);$('account-status').classList.toggle('hidden',!loggedIn);$('booking-history').classList.toggle('hidden',!loggedIn);$('account-greeting').textContent=account?'Logged in as '+account.full_name+' ('+account.phone+').':'';$('auth-title').textContent='My Account';$('auth-intro').textContent=loggedIn?'You are signed in and can submit a booking.':'Create an account or log in to manage your booking requests.';$('booking-form').querySelectorAll('input,select').forEach(el=>el.disabled=false);$('submit').disabled=!loggedIn;$('submit').title=loggedIn?'Submit your booking request':'Log in to submit a booking request';$('search-buses').disabled=false;if(loggedIn)loadBookingHistory();else $('booking-history-list').textContent='';}
+async function loadBookingHistory(){
+ const box=$('booking-history-list');box.textContent='Loading bookings…';
+ try{
+  const response=await fetch('/api/bookings',{credentials:'same-origin',headers:{'Accept':'application/json'}});
+  const data=await apiJson(response);const bookings=data.bookings||[];
+  if(!bookings.length){box.textContent='You have no bookings yet.';return;}
+  box.innerHTML=bookings.map(b=>'<div style="border:1px solid #e0e8e2;padding:12px;margin:8px 0;border-radius:4px"><strong>'+escapeHtml(b.reference)+'</strong> · '+escapeHtml(b.departure)+' → '+escapeHtml(b.destination)+'<br><small>'+escapeHtml(String(b.travel_date).slice(0,10))+' · '+escapeHtml(b.passengers)+' passenger(s) · KSh '+Number(b.amount_kes||0).toLocaleString('en-KE')+'</small><br><span style="font-weight:700;color:'+(b.payment_status==='paid'?'#087b45':'#805d12')+'">'+escapeHtml(String(b.payment_status||'pending').toUpperCase())+'</span>'+(b.payment_status==='paid'?' <button type="button" class="switch" data-ticket="'+escapeHtml(b.reference)+'">View / Print Ticket</button>':'')+'</div>').join('');
+  box.querySelectorAll('[data-ticket]').forEach(button=>button.addEventListener('click',()=>showSavedTicket(button.dataset.ticket)));
+ }catch(error){box.textContent=error.message;}
+}
+async function showSavedTicket(reference){
+ const box=$('result');box.className='result status';box.textContent='Loading ticket…';
+ try{
+  const response=await fetch('/api/tickets/'+encodeURIComponent(reference),{credentials:'same-origin'});
+  const ticket=await apiJson(response);
+  box.className='result success';
+  box.innerHTML='<div id="ticket-print-area" style="background:#fff;padding:18px;border:2px solid #087b45;border-radius:5px;color:#243329"><h2 style="color:#087b45;margin:0 0 8px">COACHLINK — E-TICKET</h2><p><strong>Booking:</strong> '+escapeHtml(ticket.reference)+'</p><p><strong>Passenger:</strong> '+escapeHtml(ticket.passenger)+'</p><p><strong>Route:</strong> '+escapeHtml(ticket.from)+' → '+escapeHtml(ticket.to)+'</p><p><strong>Travel date:</strong> '+escapeHtml(String(ticket.travelDate).slice(0,10))+'</p><p><strong>Passengers:</strong> '+escapeHtml(ticket.passengers)+'</p><p><strong>Amount paid:</strong> KSh '+Number(ticket.amountKes).toLocaleString('en-KE')+'</p><p><strong>M-Pesa receipt:</strong> '+escapeHtml(ticket.mpesaReceipt)+'</p><img alt="Ticket QR code" src="'+ticket.qrDataUrl+'" style="width:190px;height:190px;display:block;margin:12px auto"></div><button type="button" id="print-ticket" class="submit" style="margin-top:12px">Print Ticket</button>';
+  $('print-ticket').addEventListener('click',()=>window.print());box.scrollIntoView({behavior:'smooth'});
+ }catch(error){box.className='result error';box.textContent=error.message;}
+}
 function mode(value){authMode=value;$('auth-name').required=value==='register';$('auth-name-wrap').classList.toggle('hidden',value==='login');$('auth-password').autocomplete(value==='login'?'current-password':'new-password');$('auth-password').placeholder=value==='login'?'Enter your password':'Create a password';$('auth-submit').textContent=value==='login'?'Login':'Create Account';$('auth-switch-text').textContent=value==='login'?'New passenger?':'Already registered?';$('auth-switch').textContent=value==='login'?'Create Account':'Login';$('auth-message').className='hidden'}
 $('auth-switch').addEventListener('click',()=>mode(authMode==='register'?'login':'register'));
-$('auth-form').addEventListener('submit',async e=>{e.preventDefault();const btn=$('auth-submit');btn.disabled=true;btn.textContent='Please wait…';try{const payload={phone:$('auth-phone').value.trim(),password:$('auth-password').value};if(authMode==='register')payload.fullName=$('auth-name').value.trim();const r=await fetch('/api/auth/'+(authMode==='register'?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not process account.');setAccount(data.account);$('auth-form').reset();$('auth-message').className='hidden'}catch(err){authMessage(err.message)}finally{btn.disabled=false;btn.textContent=authMode==='login'?'Login':'Create Account'}});
+$('auth-form').addEventListener('submit',async e=>{e.preventDefault();const btn=$('auth-submit');btn.disabled=true;btn.textContent='Please wait…';try{const payload={phone:$('auth-phone').value.trim(),password:$('auth-password').value};if(authMode==='register')payload.fullName=$('auth-name').value.trim();const r=await fetch('/api/auth/'+(authMode==='register'?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});const data=await apiJson(r);if(!r.ok)throw Error(data.error||'Could not process account.');setAccount(data.account);$('auth-form').reset();$('auth-message').className='hidden'}catch(err){authMessage(err.message)}finally{btn.disabled=false;btn.textContent=authMode==='login'?'Login':'Create Account'}});
 $('logout').addEventListener('click',async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'});setAccount(null);mode('login')});
 async function checkPayment(reference) {
  const box=$('result');
  try {
   const r=await fetch('/api/payments/status/'+encodeURIComponent(reference),{credentials:'same-origin'});
-  const data=await r.json();
+  const data=await apiJson(r);
   if(!r.ok) throw Error(data.error||'Could not check payment.');
   if(data.status==='paid'){
    const ticketResponse=await fetch('/api/tickets/'+encodeURIComponent(reference),{credentials:'same-origin'});
-   const ticket=await ticketResponse.json();
+   const ticket=await apiJson(ticketResponse);
    if(!ticketResponse.ok) throw Error(ticket.error||'Payment confirmed, but ticket generation failed.');
    box.className='result success';
    box.innerHTML='<div id="ticket-print-area" style="background:#fff;padding:18px;border:2px solid #087b45;border-radius:5px;color:#243329"><h2 style="color:#087b45;margin:0 0 8px">COACHLINK — E-TICKET</h2><p><strong>Booking:</strong> '+ticket.reference+'</p><p><strong>Passenger:</strong> '+ticket.passenger+'</p><p><strong>Route:</strong> '+ticket.from+' → '+ticket.to+'</p><p><strong>Travel date:</strong> '+String(ticket.travelDate).slice(0,10)+'</p><p><strong>Passengers:</strong> '+ticket.passengers+'</p><p><strong>Amount paid:</strong> KSh '+Number(ticket.amountKes).toLocaleString('en-KE')+'</p><p><strong>M-Pesa receipt:</strong> '+ticket.mpesaReceipt+'</p><img alt="Ticket QR code" src="'+ticket.qrDataUrl+'" style="width:190px;height:190px;display:block;margin:12px auto"><p style="text-align:center;font-size:12px">Present this QR code when boarding.</p></div><button type="button" id="print-ticket" class="submit" style="margin-top:12px">Print Ticket</button>';
@@ -146,7 +173,7 @@ async function startPayment(reference,phone) {
  const box=$('result');box.className='result status';box.textContent='Sending M-Pesa prompt…';
  try {
   const r=await fetch('/api/payments/stk-push',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({reference,phone})});
-  const data=await r.json();if(!r.ok) throw Error(data.error||'Could not start M-Pesa payment.');
+  const data=await apiJson(r);if(!r.ok) throw Error(data.error||'Could not start M-Pesa payment.');
   box.className='result status';box.textContent='M-Pesa prompt sent. Check '+phone+' and enter your PIN. Waiting for Safaricom confirmation…';
   let attempts=0;const timer=setInterval(async()=>{attempts++;const state=await checkPayment(reference);if(state==='paid'||state==='failed'||attempts>=15)clearInterval(timer);},4000);
  } catch(err) {
@@ -159,13 +186,13 @@ $('booking-form').addEventListener('submit',async e=>{
  const payload={from:$('from').value.trim(),to:$('to').value.trim(),travelDate:$('date').value,passengers:Number($('pax').value),tripType,returnDate:tripType==='round' ? $('return-date').value : null};
  try {
   const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});
-  const data=await r.json();if(!r.ok)throw Error(data.error||'Could not save booking.');
+  const data=await apiJson(r);if(!r.ok)throw Error(data.error||'Could not save booking.');
   box.className='result status';box.innerHTML='<strong>Booking created: '+data.reference+'</strong><p>Total fare: KSh '+Number(data.amountKes).toLocaleString('en-KE')+'</p>';
   const phone=$('payment-phone').value.trim()||data.phone||'';await startPayment(data.reference,phone);
  } catch(err){box.className='result error';box.textContent=err.message;}
  finally{btn.disabled=!loggedIn;btn.textContent='Submit Booking Request';}
 });
 
-(async()=>{try{const r=await fetch('/api/auth/me',{credentials:'same-origin'});if(r.ok){const data=await r.json();setAccount(data.account)}else setAccount(null)}catch{setAccount(null)}})();
+(async()=>{try{const r=await fetch('/api/auth/me',{credentials:'same-origin'});if(r.ok){const data=await apiJson(r);setAccount(data.account)}else setAccount(null)}catch{setAccount(null)}})();
 </script>
 </body></html>
