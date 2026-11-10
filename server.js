@@ -214,6 +214,32 @@ app.post('/api/bookings', requireAccount, async (req, res) => {
   } catch (e) { console.error('Booking save failed:', e.message); res.status(503).json({ error: 'Booking service is not ready. Please try again shortly.' }); }
 });
 
+app.post('/api/payments/till-receipt', requireAccount, async (req, res) => {
+  const { reference, receipt, phone: suppliedPhone } = req.body || {};
+  const code = String(receipt || '').trim().toUpperCase().replace(/\\s+/g, '');
+  const phone = normalisePhone(suppliedPhone || req.account.phone);
+  if (typeof reference !== 'string' || !reference.trim()) return res.status(400).json({ error: 'Booking reference is required.' });
+  if (!/^[A-Z0-9]{8,12}$/.test(code)) return res.status(400).json({ error: 'Enter the M-Pesa transaction code from your confirmation message.' });
+  if (!phone) return res.status(400).json({ error: 'Enter a valid Kenyan phone number.' });
+  try {
+    await initialise();
+    const found = await db().query("SELECT id, reference, amount_kes, payment_status FROM bookings WHERE reference=$1 AND account_id=$2", [reference.trim(), req.account.id]);
+    if (!found.rowCount) return res.status(404).json({ error: 'Booking not found.' });
+    const booking = found.rows[0];
+    if (booking.payment_status === 'paid') return res.status(409).json({ error: 'This booking is already paid.' });
+    if (booking.payment_status === 'review') return res.status(409).json({ error: 'A receipt has already been submitted and is awaiting verification.' });
+    await db().query(
+      "UPDATE bookings SET payment_status='review', payment_phone=$1, mpesa_receipt_number=$2, payment_result=$3 WHERE id=$4",
+      [phone, code, 'Till 4831168 receipt submitted by passenger; awaiting manual verification. Amount expected KSh ' + booking.amount_kes, booking.id]
+    );
+    return res.status(202).json({ status: 'review', reference: booking.reference, message: 'Receipt submitted. Payment is awaiting manual verification.' });
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'This M-Pesa receipt code has already been used for another booking. Please check the code.' });
+    console.error('Till receipt submission failed:', e.message);
+    return res.status(503).json({ error: 'Could not submit your M-Pesa receipt. Please try again.' });
+  }
+});
+
 app.post('/api/payments/stk-push', requireAccount, async (req, res) => {
   const { reference, phone: suppliedPhone } = req.body || {};
   const phone = normalisePhone(suppliedPhone || req.account.phone);
@@ -304,7 +330,7 @@ app.get('/api/payments/status/:reference', requireAccount, async (req, res) => {
     const result = await db().query('SELECT reference, amount_kes, payment_status, mpesa_receipt_number, payment_result, paid_at FROM bookings WHERE reference=$1 AND account_id=$2', [req.params.reference, req.account.id]);
     if (!result.rowCount) return res.status(404).json({ error: 'Booking not found.' });
     const b = result.rows[0];
-    res.json({ reference: b.reference, amountKes: b.amount_kes, status: b.payment_status, receipt: b.mpesa_receipt_number, paidAt: b.paid_at, message: b.payment_status === 'paid' ? 'Payment confirmed. Your booking is paid.' : b.payment_status === 'processing' ? 'Waiting for Safaricom payment confirmation.' : b.payment_status === 'failed' ? 'Payment was not completed. You may try again.' : b.payment_status === 'review' ? 'Payment is being checked by support.' : 'Payment has not started.' });
+    res.json({ reference: b.reference, amountKes: b.amount_kes, status: b.payment_status, receipt: b.mpesa_receipt_number, paidAt: b.paid_at, message: b.payment_status === 'paid' ? 'Payment confirmed. Your booking is paid.' : b.payment_status === 'processing' ? 'Waiting for Safaricom payment confirmation.' : b.payment_status === 'failed' ? 'Payment was not completed. You may try again.' : b.payment_status === 'review' ? 'M-Pesa receipt submitted. Awaiting manual payment verification; your ticket is not issued yet.' : 'Payment has not started. Pay to Till 4831168 and submit your M-Pesa receipt code.' });
   } catch (e) { console.error('Payment status failed:', e.message); res.status(503).json({ error: 'Could not check payment status.' }); }
 });
 
