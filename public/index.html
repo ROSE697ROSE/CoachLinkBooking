@@ -106,7 +106,9 @@ async function loadRoutes(){
  routeCatalog=data.routes||[];
  $('from').innerHTML='<option value="">Select departure</option>'+[...new Set(routeCatalog.map(r=>r.from))].sort().map(v=>'<option value="'+v+'">'+v+'</option>').join('');
  $('to').innerHTML='<option value="">Select destination</option>';
+ $('to').addEventListener('change',updateCityRequirements);
  $('from').addEventListener('change',()=>{
+  updateCityRequirements();
   const from=$('from').value;
   const destinations=[...new Set(routeCatalog.filter(r=>r.from===from).map(r=>r.to))].sort();
   $('to').innerHTML='<option value="">Select destination</option>'+destinations.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
@@ -126,6 +128,7 @@ $('search-buses').addEventListener('click',()=>{
  box.scrollIntoView({behavior:'smooth'});
 });
 document.querySelectorAll('.trip-tab').forEach(btn=>btn.addEventListener('click',()=>{tripType=btn.dataset.trip;document.querySelectorAll('.trip-tab').forEach(b=>b.classList.toggle('active',b===btn));$('return-wrap').classList.toggle('show',tripType==='round');$('return-date').required=tripType==='round'}));
+function updateCityRequirements(){const missing=[];if(!$('to').value)missing.push('To city is required.');if(!$('from').value)missing.push('From city is required.');$('booking-validation').innerHTML=missing.map(message=>'<span>'+message+'</span>').join('');}
 function authMessage(text,error=true){const el=$('auth-message');el.className='result '+(error?'error':'success');el.textContent=text}
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function setAccount(account){loggedIn=!!account;if(account && $('payment-phone')) $('payment-phone').value=account.phone||'';$('auth-form').classList.toggle('hidden',loggedIn);$('account-status').classList.toggle('hidden',!loggedIn);$('booking-history').classList.toggle('hidden',!loggedIn);$('account-greeting').textContent=account?'Logged in as '+account.full_name+' ('+account.phone+').':'';$('auth-title').textContent='My Account';$('auth-intro').textContent=loggedIn?'You are signed in and can submit a booking.':'Create an account or log in to manage your booking requests.';$('booking-form').querySelectorAll('input,select').forEach(el=>el.disabled=false);$('submit').disabled=!loggedIn;$('submit').title=loggedIn?'Submit your booking request':'Log in to submit a booking request';$('search-buses').disabled=false;if(loggedIn)loadBookingHistory();else $('booking-history-list').textContent='';}
