@@ -1,5 +1,5 @@
 {
-  "source": "K24 Digital report dated 17 July 2026, reporting ENA Coach's revised fare schedule announced 15 July 2026. These are published corridor fares, not live seat availability.",
+  "source": "ENA Coach revised fare schedule announced 15 July 2026, as reported by K24 Digital on 17 July 2026. Published corridor fares only; not live seat availability.",
   "lastVerified": "2026-07-17",
   "currency": "KES",
   "routes": [
@@ -62,12 +62,6 @@
       "to": "Nairobi",
       "fare": 1800,
       "routeLabel": "Kakamega – Kapsabet – Nairobi"
-    },
-    {
-      "from": "Busia",
-      "to": "Nairobi",
-      "fare": 1800,
-      "routeLabel": "Busia – Kisumu – Nairobi"
     },
     {
       "from": "Nairobi",
@@ -134,6 +128,12 @@
       "to": "Mombasa",
       "fare": 3000,
       "routeLabel": "Port Victoria – Siaya – Bondo – Ahero – Mombasa"
+    },
+    {
+      "from": "Nairobi",
+      "to": "Oyugis",
+      "fare": 1800,
+      "routeLabel": "Nairobi – Oyugis"
     }
   ]
 }
