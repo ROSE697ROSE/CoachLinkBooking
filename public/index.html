@@ -97,24 +97,81 @@ async function apiJson(response){
  if(!response.ok) throw new Error(data.error||'The server is temporarily unavailable. Please try again.');
  return data;
 }
-async function loadRoutes(){
- const response=await fetch('/api/routes',{headers:{'Accept':'application/json'},cache:'no-store'});
- const contentType=response.headers.get('content-type')||'';
- if(!contentType.includes('application/json')) throw new Error('Booking server is updating. Refresh this page in a moment.');
- const data=await apiJson(response);
- if(!Array.isArray(data.routes)) throw new Error('Route list could not be loaded. Please refresh the page.');
- routeCatalog=data.routes||[];
- $('from').innerHTML='<option value="">Select departure</option>'+[...new Set(routeCatalog.map(r=>r.from))].sort().map(v=>'<option value="'+v+'">'+v+'</option>').join('');
- $('to').innerHTML='<option value="">Select destination</option>';
- $('to').addEventListener('change',updateCityRequirements);
- $('from').addEventListener('change',()=>{
-  updateCityRequirements();
-  const from=$('from').value;
-  const destinations=[...new Set(routeCatalog.filter(r=>r.from===from).map(r=>r.to))].sort();
-  $('to').innerHTML='<option value="">Select destination</option>'+destinations.map(v=>'<option value="'+v+'">'+v+'</option>').join('');
- });
+const KENYA_LOCATIONS = [
+ {county:'Mombasa',places:['Mombasa','Likoni','Bamburi','Mtwapa']},
+ {county:'Kwale',places:['Kwale','Ukunda','Diani','Msambweni','Lunga Lunga']},
+ {county:'Kilifi',places:['Kilifi','Malindi','Watamu','Mariakani','Kaloleni','Mtwapa']},
+ {county:'Tana River',places:['Hola','Garsen','Madogo','Bura']},
+ {county:'Lamu',places:['Lamu','Mpeketoni','Witu','Hindi']},
+ {county:'Taita-Taveta',places:['Voi','Wundanyi','Taveta','Mwatate']},
+ {county:'Garissa',places:['Garissa','Dadaab','Masalani','Modogashe']},
+ {county:'Wajir',places:['Wajir','Habaswein','Griftu','Buna']},
+ {county:'Mandera',places:['Mandera','El Wak','Rhamu','Takaba']},
+ {county:'Marsabit',places:['Marsabit','Moyale','Laisamis','North Horr']},
+ {county:'Isiolo',places:['Isiolo','Merti','Garbatulla']},
+ {county:'Meru',places:['Meru','Maua','Nkubu','Timau','Mitunguu']},
+ {county:'Tharaka-Nithi',places:['Chuka','Chogoria','Marimanti','Maua']},
+ {county:'Embu',places:['Embu','Runyenjes','Siakago','Ishiara']},
+ {county:'Kitui',places:['Kitui','Mwingi','Mutomo','Kyuso']},
+ {county:'Machakos',places:['Machakos','Athi River','Mlolongo','Kangundo','Tala','Masii']},
+ {county:'Makueni',places:['Wote','Sultan Hamud','Mtito Andei','Makindu','Kibwezi']},
+ {county:'Nyandarua',places:['Ol Kalou','Engineer','Ndaragwa','Njabini']},
+ {county:'Nyeri',places:['Nyeri','Karatina','Othaya','Mukurwe-ini','Nanyuki']},
+ {county:'Kirinyaga',places:['Kerugoya','Kutus','Sagana','Wanguru']},
+ {county:'Murang’a',places:['Murang’a','Kenol','Maragua','Kangema','Kigumo']},
+ {county:'Kiambu',places:['Kiambu','Thika','Ruiru','Kikuyu','Limuru','Githunguri','Juja','Wangige']},
+ {county:'Turkana',places:['Lodwar','Kakuma','Lokichogio','Lokichar']},
+ {county:'West Pokot',places:['Kapenguria','Kacheliba','Sigor','Chepareria']},
+ {county:'Samburu',places:['Maralal','Baragoi','Archer’s Post','Wamba']},
+ {county:'Trans Nzoia',places:['Kitale','Kiminini','Endebess','Maili Saba']},
+ {county:'Uasin Gishu',places:['Eldoret','Burnt Forest','Turbo','Moi’s Bridge','Matunda']},
+ {county:'Elgeyo-Marakwet',places:['Iten','Kapsowar','Chepkorio','Tambach']},
+ {county:'Nandi',places:['Kapsabet','Nandi Hills','Mosoriot','Lessos']},
+ {county:'Baringo',places:['Kabarnet','Eldama Ravine','Marigat','Mogotio']},
+ {county:'Laikipia',places:['Nanyuki','Nyahururu','Rumuruti','Doldol']},
+ {county:'Nakuru',places:['Nakuru','Naivasha','Gilgil','Molo','Njoro','Subukia']},
+ {county:'Narok',places:['Narok','Kilgoris','Suswa','Ololulunga']},
+ {county:'Kajiado',places:['Kajiado','Kitengela','Ngong','Ongata Rongai','Namanga','Isinya']},
+ {county:'Kericho',places:['Kericho','Litein','Londiani','Kipkelion','Sotik']},
+ {county:'Bomet',places:['Bomet','Sotik','Longisa','Mulot','Litein']},
+ {county:'Kakamega',places:['Kakamega','Mumias','Malava','Lugari','Butere','Shinyalu']},
+ {county:'Vihiga',places:['Mbale','Luanda','Chavakali','Majengo']},
+ {county:'Bungoma',places:['Bungoma','Webuye','Kimilili','Chwele','Malakisi']},
+ {county:'Busia',places:['Busia','Malaba','Nambale','Port Victoria','Funyula','Luanda Kotieno']},
+ {county:'Siaya',places:['Siaya','Bondo','Usenge','Ugunja','Yala','Nyadorera']},
+ {county:'Kisumu',places:['Kisumu','Ahero','Maseno','Muhoroni','Kombewa']},
+ {county:'Homa Bay',places:['Homa Bay','Mbita','Oyugis','Kendu Bay','Ndhiwa','Rodi Kopany']},
+ {county:'Migori',places:['Migori','Awendo','Rongo','Kehancha','Isebania','Sirare']},
+ {county:'Kisii',places:['Kisii','Ogembo','Suneka','Keroka']},
+ {county:'Nyamira',places:['Nyamira','Keroka','Nyansiongo','Kebirigo']},
+ {county:'Nairobi',places:['Nairobi','Westlands','Karen','Kasarani','Embakasi','Rongai']}
+];
+function kenyaLocationOptions(placeholder){
+ const entries=[];
+ for(const group of KENYA_LOCATIONS){
+  entries.push({value:group.county+' County',label:group.county+' County'});
+  for(const place of group.places) entries.push({value:place,label:place+' — '+group.county+' County'});
+ }
+ const unique=new Map();
+ for(const item of entries) if(!unique.has(item.value.toLowerCase())) unique.set(item.value.toLowerCase(),item);
+ return '<option value="">'+placeholder+'</option>'+[...unique.values()].sort((a,b)=>a.label.localeCompare(b.label)).map(item=>'<option value="'+escapeHtml(item.value)+'">'+escapeHtml(item.label)+'</option>').join('');
 }
-loadRoutes().catch(err=>{ $('search-results').className='results-panel'; $('search-results').textContent=err.message; });
+async function loadRoutes(){
+ try{
+  const response=await fetch('/api/routes',{headers:{'Accept':'application/json'},cache:'no-store'});
+  const contentType=response.headers.get('content-type')||'';
+  if(contentType.includes('application/json')){
+   const data=await apiJson(response);
+   if(Array.isArray(data.routes)) routeCatalog=data.routes;
+  }
+ }catch(error){console.warn('Fare list unavailable; location directory remains available.',error);}
+ $('from').innerHTML=kenyaLocationOptions('Select departure county or town');
+ $('to').innerHTML=kenyaLocationOptions('Select destination county or town');
+ $('from').addEventListener('change',updateCityRequirements);
+ $('to').addEventListener('change',updateCityRequirements);
+ updateCityRequirements();
+}
+loadRoutes();
 $('search-buses').addEventListener('click',()=>{
  const from=$('from').value,to=$('to').value,date=$('date').value,box=$('search-results');
  if(!from||!to||!date){box.className='results-panel';box.textContent='Please select departure, destination and travel date.';box.scrollIntoView({behavior:'smooth'});return}
