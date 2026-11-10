@@ -216,7 +216,7 @@ app.post('/api/bookings', requireAccount, async (req, res) => {
 
 app.post('/api/payments/till-receipt', requireAccount, async (req, res) => {
   const { reference, receipt, phone: suppliedPhone } = req.body || {};
-  const code = String(receipt || '').trim().toUpperCase().replace(/\\s+/g, '');
+  const code = String(receipt || '').trim().toUpperCase().replace(/\s+/g, '');
   const phone = normalisePhone(suppliedPhone || req.account.phone);
   if (typeof reference !== 'string' || !reference.trim()) return res.status(400).json({ error: 'Booking reference is required.' });
   if (!/^[A-Z0-9]{8,12}$/.test(code)) return res.status(400).json({ error: 'Enter the M-Pesa transaction code from your confirmation message.' });
