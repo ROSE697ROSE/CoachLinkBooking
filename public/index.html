@@ -77,7 +77,7 @@ a{color:inherit}.topbar{height:5px;background:var(--gold)}.header{background:#ff
 <article class="step"><b>2</b><h3>Submit booking</h3><p>Log in to your passenger account and submit your journey details.</p></article>
 <article class="step"><b>3</b><h3>Pay by M-Pesa</h3><p>Approve the M-Pesa prompt on your phone and wait for automatic payment confirmation.</p></article>
 </div>
-<div class="payment"><h3>Secure M-Pesa payments</h3><p>When your route fare and Daraja merchant account are configured, CoachLink will send an M-Pesa STK prompt to your phone. Enter your PIN and wait for automatic payment confirmation. Do not send money to an unverified Till number.</p></div>
+<div class="payment"><h3>Pay by M-Pesa Till</h3><p>Use Lipa na M-Pesa → Buy Goods and Services → Till Number <strong>4831168</strong>. Pay the exact amount shown on your booking, then submit the M-Pesa receipt code under My Account. Tickets are issued only after payment is verified.</p></div>
 </section>
 <section class="section" id="ticket"><div class="ticket-info"><h2>Print Ticket</h2><p>After payment is confirmed, your electronic ticket and QR code will appear automatically. Log in to your passenger account to view it.</p></div></section>
 
@@ -195,9 +195,26 @@ async function loadBookingHistory(){
   const response=await fetch('/api/bookings',{credentials:'same-origin',headers:{'Accept':'application/json'}});
   const data=await apiJson(response);const bookings=data.bookings||[];
   if(!bookings.length){box.textContent='You have no bookings yet.';return;}
-  box.innerHTML=bookings.map(b=>'<div style="border:1px solid #e0e8e2;padding:12px;margin:8px 0;border-radius:4px"><strong>'+escapeHtml(b.reference)+'</strong> · '+escapeHtml(b.departure)+' → '+escapeHtml(b.destination)+'<br><small>'+escapeHtml(String(b.travel_date).slice(0,10))+' · '+escapeHtml(b.passengers)+' passenger(s) · KSh '+Number(b.amount_kes||0).toLocaleString('en-KE')+'</small><br><span style="font-weight:700;color:'+(b.payment_status==='paid'?'#f36b21':'#17110e')+'">'+escapeHtml(String(b.payment_status||'pending').toUpperCase())+'</span>'+(b.payment_status==='paid'?' <button type="button" class="switch" data-ticket="'+escapeHtml(b.reference)+'">View / Print Ticket</button>':'')+'</div>').join('');
+  box.innerHTML=bookings.map(b=>{
+   const status=String(b.payment_status||'not_started').toLowerCase();
+   const paid=status==='paid',review=status==='review';
+   return '<div style="border:1px solid #e0e8e2;padding:12px;margin:8px 0;border-radius:4px"><strong>'+escapeHtml(b.reference)+'</strong> · '+escapeHtml(b.departure)+' → '+escapeHtml(b.destination)+'<br><small>'+escapeHtml(String(b.travel_date).slice(0,10))+' · '+escapeHtml(b.passengers)+' passenger(s) · KSh '+Number(b.amount_kes||0).toLocaleString('en-KE')+'</small><br><strong style="color:'+(paid?'#16803c':review?'#a05a00':'#a05a00')+'">'+(paid?'PAID':review?'AWAITING VERIFICATION':'PAYMENT NOT SUBMITTED')+'</strong>'+(paid?' <button type="button" class="switch" data-ticket="'+escapeHtml(b.reference)+'">View / Print Ticket</button>':review?'<p style="margin:8px 0 0">M-Pesa receipt '+escapeHtml(b.mpesa_receipt_number||'')+' submitted. We are checking the payment. Your ticket will appear after confirmation.</p>':'<div style="margin-top:10px;padding:12px;background:#fff8e8;border-radius:4px"><strong>Pay by M-Pesa Till</strong><p style="margin:5px 0">1. Open M-Pesa → Lipa na M-Pesa → Buy Goods and Services.</p><p style="margin:5px 0">2. Till Number: <strong>4831168</strong></p><p style="margin:5px 0">3. Amount: <strong>KSh '+Number(b.amount_kes||0).toLocaleString('en-KE')+'</strong></p><p style="margin:5px 0">4. Enter your PIN. Then submit the transaction code below.</p><form class="till-receipt-form" data-reference="'+escapeHtml(b.reference)+'" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input name="receipt" required minlength="8" maxlength="12" pattern="[A-Za-z0-9]{8,12}" placeholder="M-Pesa receipt code" style="flex:1;min-width:180px;padding:10px;border:1px solid #ccc;border-radius:4px"><button class="submit" type="submit">Submit Receipt</button></form><small style="display:block;margin-top:6px;color:#765">Submitting a code does not confirm payment. We verify it before issuing your ticket.</small></div>')+'</div>';
+  }).join('');
   box.querySelectorAll('[data-ticket]').forEach(button=>button.addEventListener('click',()=>showSavedTicket(button.dataset.ticket)));
+  box.querySelectorAll('.till-receipt-form').forEach(form=>form.addEventListener('submit',submitTillReceipt));
  }catch(error){box.textContent=error.message;}
+}
+async function submitTillReceipt(event){
+ event.preventDefault();
+ const form=event.currentTarget,button=form.querySelector('button'),reference=form.dataset.reference,receipt=form.elements.receipt.value.trim();
+ button.disabled=true;button.textContent='Submitting…';
+ try{
+  const response=await fetch('/api/payments/till-receipt',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({reference,receipt,phone:$('payment-phone').value.trim()})});
+  const data=await apiJson(response);
+  if(!response.ok)throw new Error(data.error||'Could not submit receipt.');
+  $('result').className='result status';$('result').textContent='Receipt submitted for '+reference+'. Payment is awaiting verification; no ticket is issued yet.';
+  await loadBookingHistory();
+ }catch(error){$('result').className='result error';$('result').textContent=error.message;button.disabled=false;button.textContent='Submit Receipt';}
 }
 async function showSavedTicket(reference){
  const box=$('result');box.className='result status';box.textContent='Loading ticket…';
@@ -251,7 +268,7 @@ $('booking-form').addEventListener('submit',async e=>{
   const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});
   const data=await apiJson(r);if(!r.ok)throw Error(data.error||'Could not save booking.');
   box.className='result status';box.innerHTML='<strong>Booking created: '+data.reference+'</strong><p>Total fare: KSh '+Number(data.amountKes).toLocaleString('en-KE')+'</p>';
-  const phone=$('payment-phone').value.trim()||data.phone||'';await startPayment(data.reference,phone);
+  $('result').className='result status';$('result').innerHTML='<strong>Booking created: '+escapeHtml(data.reference)+'</strong><p>Pay KSh '+Number(data.amountKes).toLocaleString('en-KE')+' to M-Pesa Till <strong>4831168</strong> using Buy Goods and Services. Then enter the M-Pesa receipt code under My Account → My bookings.</p>';await loadBookingHistory();
  } catch(err){box.className='result error';box.textContent=err.message;}
  finally{btn.disabled=!loggedIn;btn.textContent='Continue Booking';}
 });
