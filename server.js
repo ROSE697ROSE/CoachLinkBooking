@@ -46,15 +46,15 @@ async function initialise() {
   });
   return initPromise;
 }
-function signToken(id) {
+function signToken(id, secret = SESSION_SECRET) {
   const payload = Buffer.from(JSON.stringify({ id: String(id), exp: Date.now() + 604800000 })).toString('base64url');
-  return payload + '.' + crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  return payload + '.' + crypto.createHmac('sha256', secret).update(payload).digest('base64url');
 }
-function verifyToken(token) {
+function verifyToken(token, secret = SESSION_SECRET) {
   if (!token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 2) return null;
-  const expected = crypto.createHmac('sha256', SESSION_SECRET).update(parts[0]).digest();
+  const expected = crypto.createHmac('sha256', secret).update(parts[0]).digest();
   const actual = Buffer.from(parts[1], 'base64url');
   if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return null;
   try { const data = JSON.parse(Buffer.from(parts[0], 'base64url').toString()); return data.id && data.exp > Date.now() ? data : null; } catch { return null; }
@@ -68,6 +68,22 @@ function setSession(res, id) {
 }
 function clearSession(res) {
   res.setHeader('Set-Cookie', SESSION_COOKIE + '=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0' + (process.env.NODE_ENV === 'production' ? '; Secure' : ''));
+}
+const ADMIN_COOKIE = 'coachlink_admin_session';
+function adminSecret() { return process.env.ADMIN_SESSION_SECRET || SESSION_SECRET; }
+function setAdminSession(res, username) {
+  res.setHeader('Set-Cookie', ADMIN_COOKIE + '=' + encodeURIComponent(signToken('admin:' + username, adminSecret())) + '; HttpOnly; Path=/; SameSite=Strict; Max-Age=28800' + (process.env.NODE_ENV === 'production' ? '; Secure' : ''));
+}
+function clearAdminSession(res) {
+  res.setHeader('Set-Cookie', ADMIN_COOKIE + '=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0' + (process.env.NODE_ENV === 'production' ? '; Secure' : ''));
+}
+function requireAdmin(req, res, next) {
+  const item = (req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith(ADMIN_COOKIE + '='));
+  const token = item ? decodeURIComponent(item.slice(ADMIN_COOKIE.length + 1)) : '';
+  const data = verifyToken(token, adminSecret());
+  if (!data || !data.id.startsWith('admin:')) return res.status(401).json({ error: 'Administrator login required.' });
+  req.admin = { username: data.id.slice(6) };
+  next();
 }
 async function requireAccount(req, res, next) {
   try {
@@ -131,6 +147,49 @@ function callbackItems(items) {
   for (const item of items || []) if (item && item.Name) out[item.Name] = item.Value;
   return out;
 }
+
+app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
+app.post('/api/admin/login', (req, res) => {
+  const username = String((req.body || {}).username || '').trim();
+  const password = String((req.body || {}).password || '');
+  const expectedUser = process.env.ADMIN_USERNAME || '';
+  const expectedPassword = process.env.ADMIN_PASSWORD || '';
+  if (!expectedUser || !expectedPassword || !process.env.ADMIN_SESSION_SECRET) return res.status(503).json({ error: 'Admin login is not configured. Set ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_SESSION_SECRET in Render Environment.' });
+  const safeEqual = (a, b) => { const aa = Buffer.from(String(a)); const bb = Buffer.from(String(b)); return aa.length === bb.length && crypto.timingSafeEqual(aa, bb); };
+  if (!safeEqual(username, expectedUser) || !safeEqual(password, expectedPassword)) return res.status(401).json({ error: 'Incorrect administrator username or password.' });
+  setAdminSession(res, expectedUser);
+  res.json({ ok: true, username: expectedUser });
+});
+app.get('/api/admin/me', requireAdmin, (req, res) => res.json({ admin: req.admin }));
+app.post('/api/admin/logout', (_req, res) => { clearAdminSession(res); res.json({ ok: true }); });
+app.get('/api/admin/bookings', requireAdmin, async (_req, res) => {
+  try {
+    await initialise();
+    const result = await db().query("SELECT reference, departure, destination, travel_date, passengers, passenger_name, phone, amount_kes, payment_status, mpesa_receipt_number, payment_phone, payment_result, created_at FROM bookings WHERE payment_status IN ('review','paid','failed') ORDER BY CASE WHEN payment_status='review' THEN 0 ELSE 1 END, created_at DESC LIMIT 300");
+    res.json({ bookings: result.rows });
+  } catch (e) { console.error('Admin bookings failed:', e.message); res.status(503).json({ error: 'Could not load admin bookings.' }); }
+});
+app.post('/api/admin/bookings/:reference/approve', requireAdmin, async (req, res) => {
+  try {
+    await initialise();
+    const result = await db().query("UPDATE bookings SET payment_status='paid', status='paid', payment_result=$1, paid_at=NOW() WHERE reference=$2 AND payment_status='review' AND mpesa_receipt_number IS NOT NULL RETURNING reference, amount_kes", ['Manually verified against Till 4831168 by admin ' + req.admin.username, req.params.reference]);
+    if (!result.rowCount) return res.status(409).json({ error: 'Booking is not awaiting verification or has no submitted M-Pesa receipt.' });
+    res.json({ ok: true, booking: result.rows[0], message: 'Payment marked PAID. Ticket is now available in the customer account.' });
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'This M-Pesa receipt code is already attached to another booking.' });
+    console.error('Admin approval failed:', e.message); res.status(503).json({ error: 'Could not approve payment.' });
+  }
+});
+app.post('/api/admin/bookings/:reference/reject', requireAdmin, async (req, res) => {
+  const reason = String((req.body || {}).reason || 'Payment could not be verified against the Till statement.').trim().slice(0, 500);
+  try {
+    await initialise();
+    const result = await db().query("UPDATE bookings SET payment_status='failed', payment_result=$1 WHERE reference=$2 AND payment_status='review' RETURNING reference", ['Receipt rejected by admin ' + req.admin.username + ': ' + reason, req.params.reference]);
+    if (!result.rowCount) return res.status(409).json({ error: 'Booking is not awaiting verification.' });
+    res.json({ ok: true, reference: result.rows[0].reference, message: 'Receipt rejected. Customer may submit a corrected receipt code.' });
+  } catch (e) { console.error('Admin rejection failed:', e.message); res.status(503).json({ error: 'Could not reject receipt.' }); }
+});
 
 app.get('/api/routes', (_req, res) => {
   const unique = new Map();
