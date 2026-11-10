@@ -105,10 +105,15 @@ function normalisePhone(value) {
 }
 function getFare(from, to) {
   const a = from.trim().toLowerCase(), b = to.trim().toLowerCase();
-  const match = routeData.routes.find(r =>
-    (r.from.toLowerCase() === a && r.to.toLowerCase() === b) ||
-    (r.from.toLowerCase() === b && r.to.toLowerCase() === a)
+  // Prefer a fare published for the exact direction. Only use the reverse
+  // direction as a fallback when no exact-direction fare exists.
+  const exact = routeData.routes.find(r =>
+    r.from.toLowerCase() === a && r.to.toLowerCase() === b
   );
+  const reverse = exact ? null : routeData.routes.find(r =>
+    r.from.toLowerCase() === b && r.to.toLowerCase() === a
+  );
+  const match = exact || reverse;
   return match && Number.isInteger(match.fare) && match.fare > 0 ? match.fare : null;
 }
 function mpesaConfig() {
@@ -193,9 +198,13 @@ app.post('/api/admin/bookings/:reference/reject', requireAdmin, async (req, res)
 
 app.get('/api/routes', (_req, res) => {
   const unique = new Map();
+  // First preserve every explicitly published direction and fare.
   for (const route of routeData.routes) {
     const key = route.from.toLowerCase() + '|' + route.to.toLowerCase();
     if (!unique.has(key)) unique.set(key, { from: route.from, to: route.to, fare: route.fare, corridor: route.routeLabel });
+  }
+  // Then expose the reverse journey only where no direction-specific fare exists.
+  for (const route of routeData.routes) {
     const reverseKey = route.to.toLowerCase() + '|' + route.from.toLowerCase();
     if (!unique.has(reverseKey)) unique.set(reverseKey, { from: route.to, to: route.from, fare: route.fare, corridor: route.routeLabel });
   }
